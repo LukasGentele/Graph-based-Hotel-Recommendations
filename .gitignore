@@ -63,3 +63,9 @@ target/
 
 #PyCharm
 .idea/
+
+#Custom
+data/
+src/.db-access.json
+src/Preprocessing/composer.lock
+src/Preprocessing/vendor
