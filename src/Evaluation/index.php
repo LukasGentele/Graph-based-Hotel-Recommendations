@@ -4,6 +4,8 @@ require_once "inc.php";
 
 echo "Starting Evaluation..." . PHP_EOL;
 
+$userLimit = 10;
+
 function getRecommendations($user, $location) {
     global $graph;
 
@@ -51,7 +53,7 @@ $statistics = [
 ];
 
 foreach ($testLocations as $location) {
-    $q = "MATCH (u:User)-[y:HAS_BOOKED]->(hotel:Hotel)-[z:LOCATED_IN]->(loc:Place) MATCH (u)-[p:WROTE]->(r:Review)-[o:RATES]->(hotel) WHERE loc.name = '" . $location . "' RETURN u,loc,hotel,r LIMIT 5";
+    $q = "MATCH (u:User)-[y:HAS_BOOKED]->(hotel:Hotel)-[z:LOCATED_IN]->(loc:Place) MATCH (u)-[p:WROTE]->(r:Review)-[o:RATES]->(hotel) WHERE loc.name = '" . $location . "' RETURN u,loc,hotel,r LIMIT " . $userLimit;
     $result = $graph->sendCypherQuery($q)->getBody();
 
     $statistics["locations"][] = [
