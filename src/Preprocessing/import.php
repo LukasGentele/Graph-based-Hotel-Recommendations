@@ -201,19 +201,19 @@ foreach (new IteratorIterator($iterator) as $index => $fileInfo) {
     
                 if ($executeQuery($query)) {
                     $userCount++;
-                    
-                    $query = sprintf($dbQueries['connect'], 'User', $userKey, 'Review', $reviewKey, 'WROTE');
-                    $executeQuery($query);
-        
-                    $query = sprintf($dbQueries['connect'], 'Review', $reviewKey, 'User', $userKey, 'WRITTEN_BY');
-                    $executeQuery($query);
-        
-                    $query = sprintf($dbQueries['connect'], 'User', $userKey, 'Hotel', $hotelKey, 'HAS_BOOKED');
-                    $executeQuery($query);
-        
-                    $query = sprintf($dbQueries['connect'], 'Hotel', $hotelKey, 'User', $userKey, 'BOOKED_BY');
-                    $executeQuery($query);
                 }
+                $query = sprintf($dbQueries['connect'], 'User', $userKey, 'Review', $reviewKey, 'WROTE');
+                $executeQuery($query);
+    
+                $query = sprintf($dbQueries['connect'], 'Review', $reviewKey, 'User', $userKey, 'WRITTEN_BY');
+                $executeQuery($query);
+    
+                $query = sprintf($dbQueries['connect'], 'User', $userKey, 'Hotel', $hotelKey, 'HAS_BOOKED');
+                $executeQuery($query);
+    
+                $query = sprintf($dbQueries['connect'], 'Hotel', $hotelKey, 'User', $userKey, 'BOOKED_BY');
+                $executeQuery($query);
+                
                 $query = sprintf($dbQueries['connect'], 'User', $userKey, 'Place', $placeKey, 'HAS_VISITED');
                 $executeQuery($query);
     
