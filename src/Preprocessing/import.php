@@ -87,8 +87,8 @@ foreach (new IteratorIterator($iterator) as $index => $fileInfo) {
         }
         $hotelClass = -1;
     
-        if (isset($hotelData->HotelUrl) === false) {
-            $hotelData->HotelUrl = '';
+        if (isset($hotelData->HotelURL) === false) {
+            $hotelData->HotelURL = '';
         }
         else {
             $hotelSiteContent = file_get_contents('https://www.tripadvisor.de' . $hotelData->HotelURL);
