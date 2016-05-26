@@ -17,6 +17,17 @@ class DbRequests:
         print(q)
         return self.run(q)
 
+    def users_same_hotel_for_target_location(self, hotel, location, user):
+        q = "MATCH (h:Hotel {id: \"" + hotel + "\"})-[:BOOKED_BY]->(u:User)-[:HAS_VISITED]->(p:Place {hash: " + location + "}) WHERE NOT u.name = \"" + user + "\" RETURN u"
+        print(q)
+        return self.run(q)
+
+    def reviews_for_user_set(self, hotel,users):
+        q = "MATCH (h: Hotel {id: \"" + hotel + "\"})-[RATED_BY]-(r:Review)-[WRITTEN_BY]->(u:User) WHERE u.name IN " + str(users) +" RETURN u,r"
+        #print(q)
+        return self.run(q)
+
+
     def all_users_for_location(self, user, location):
         q = "MATCH (p:Place {hash: " + location + "})-[:VISITED_BY]->(u:User) WHERE NOT u.name = \"" + user + "\" RETURN u"
         print(q)
@@ -52,5 +63,10 @@ class DbRequests:
 
     def reviews_per_hotel(self, hotel):
         q = "MATCH (h:Hotel {name: \"" + hotel + "\"})-[:RATED_BY]->(r:Review) RETURN r"
+        print(q)
+        return self.run(q)
+
+    def hotel_review_for_user_and_location(self, user, location):
+        q = "MATCH (u:User {name: \"" + user + "\"})-[:WROTE]-(r:Review)-[:RATES]-(h:Hotel)-[:LOCATED_IN]->(p:Place {hash: "+location+"}) RETURN r,h"
         print(q)
         return self.run(q)

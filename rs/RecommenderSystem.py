@@ -2,15 +2,18 @@ __author__ = 'Christian'
 
 from DbRequests import DbRequests
 from scipy.stats import pearsonr
+from sklearn.preprocessing import MinMaxScaler
 import numpy as np
 import json
 import pprint
 import random
 
 
+
 class RecommenderSystem:
     def __init__(self):
         self.db = DbRequests()
+        self.blacklist = ["Posted by an Accorhotels.com traveler", "A TripAdvisor Member"]
 
     def sim_measure1(self, location):
         res = self.db.reviews_per_hotel_per_place(location)
@@ -249,44 +252,85 @@ class RecommenderSystem:
 
         return hotel_scores
 
-
-    def sim_measure6(self):
-        return None
-
     def sim_measure5(self, user_id, location):
         res = self.db.user_reviews_per_hotel(user_id, location)
-        hotel_scores = list()
-        #urh
-        user_hotels = list()
+        hotels = list()
+        reviews = list()
+
         for row in res:
-            user_hotels.append(row[2]["data"])
+            hotels.append(row[2]["data"]["id"])
+            reviews.append(row[1]["data"])
 
-        #get user that were in target location
-        user_res = self.db.all_users_for_location(user_id, location)
-        user_from_target_location_set = set()
-        for user in user_res:
-            user_from_target_location_set.add(user[0]["data"]["name"])
+        hotel_list_with_other_user = list()
+        for i in range(len(hotels)):
+            hotel_matrix = list()
 
-        user_hotel_with_user = list()
-        for hotel in user_hotels:
-            res = self.db.hotels_in_same_class_in_location(hotel["id"], hotel["class"])
-            hotel_ids = set()
+            res = self.db.users_same_hotel_for_target_location(hotels[i], location, user_id)
+            users = list()
             for row in res:
-                hotel_ids.add(row[0]["data"]["id"])
-            for hotel_id in hotel_ids:
-                res = self.db.all_users_for_hotel(user_id, hotel_id)
-                temp_user = set()
-                for row in res:
-                    temp_user.add(row[0]["data"]["name"])
-                len(temp_user)
-                shared_hotel_user = np.intersect1d(temp_user, user_from_target_location_set)
+                users.append(row[0]["data"]["name"])
 
-                if len(shared_hotel_user)> 0:
-                    print("success", shared_hotel_user)
+            for blacklisted in self.blacklist:
+                if blacklisted in users:
+                    users.remove(blacklisted)
 
+            res = self.db.reviews_for_user_set(hotels[i], users)
+            for j in range(0, len(res), 2):
+                line_in_matrix = list()
+                line_in_matrix.append(res[j][0]["data"]["name"])
+                rev = self.get_rating_values_from_review(res[j][1]["data"])
+                for asp in rev:
+                    line_in_matrix.append(asp)
 
+                hotel_matrix.append(line_in_matrix)
+            hotel_list_with_other_user.append(hotel_matrix)
 
-        return None
+        similarity_score = list()
+        for i in range(len(hotels)):
+            temp = self.get_rating_values_from_review(reviews[i])
+            user_hotel_rating = list()
+            user_hotel_rating.append(user_id)
+            for rating in temp:
+                user_hotel_rating.append(rating)
+            hotel_matrix = hotel_list_with_other_user[i]
+            for other_user_rating in hotel_matrix:
+                confidence = pearsonr(user_hotel_rating[1:7], other_user_rating[1:7])[0]
+                if np.isnan(confidence) or confidence <= 0:
+                    confidence = 0
+
+                similarity_score.append((other_user_rating[0], confidence))
+        filtered_scores = dict()
+        for sims in similarity_score:
+            if not sims[1] == 0:
+                if sims[0] in filtered_scores.keys():
+                    filtered_scores[sims[0]] = max(sims[1], filtered_scores[sims[0]])
+                else:
+                    filtered_scores[sims[0]] = sims[1]
+
+        hotel_scores = dict()
+        for key in filtered_scores.keys():
+            res = self.db.hotel_review_for_user_and_location(key,location)
+            for row in res:
+                rating = row[0]["data"]["ratingOverall"]
+                if rating > 3:
+                    hotel_id = row[1]["data"]["id"]
+                    rating = (rating * filtered_scores[key])/float(5)
+                    hotel_scores[hotel_id] = rating
+
+        for key in hotel_scores.keys():
+            print(key, hotel_scores[key])
+
+        return hotel_scores
+
+    def get_rating_values_from_review(self, review):
+        return_list = list()
+        return_list.append(review["ratingService"])
+        return_list.append(review["ratingLocation"])
+        return_list.append(review["ratingSleepQuality"])
+        return_list.append(review["ratingValue"])
+        return_list.append(review["ratingCleanliness"])
+        return_list.append(review["ratingRooms"])
+        return return_list
 
     def weighted_mean(self, x, w):
         sum = 0
