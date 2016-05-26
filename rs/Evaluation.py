@@ -24,7 +24,7 @@ class Evaluation:
                 "time": (b - a)}
 
     def getMeasures(self, user, location):
-        hashQuery = hashlib.sha1(user.encode('utf-8') + "-" + location.encode('utf-8')).hexdigest()
+        hashQuery = hashlib.sha1(user.encode('utf-8') + location.encode('utf-8')).hexdigest()
 
         if hashQuery not in self.cache and self.checkFileSystem(hashQuery) == False:
             self.cache[hashQuery] = self.run(user, location)
@@ -67,6 +67,8 @@ class Evaluation:
 
         hotelList = {}
 
+
+
         for i, x in enumerate(data["data"]):
             if weights[i] > 0.0:
                 for j in x.keys():
@@ -79,6 +81,8 @@ class Evaluation:
                         hotelList[j] += x[j] * weights[i]
 
         sorted_x = sorted(hotelList.items(), key=operator.itemgetter(1), reverse=True)
+
+        print sorted_x
 
         recommendations = [x[0] for x in sorted_x]
         index = recommendations.index(hotelId)

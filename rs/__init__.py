@@ -25,13 +25,12 @@ j = 0
 for row in res:
     if row[2] == 1 or row[2] == 2:
         j += 1
-        evaluate.evaluateJoined(row[0], "1209176819", row[1], row[2])
-        break
+        #evaluate.evaluateJoined(row[0], "1209176819", row[1], row[2])
+        #break
 
     if row[2] == 5:
         i += 1
         evaluate.evaluateJoined(row[0], "1209176819", row[1], row[2])
-        break
 
     #users.append(row[0]["data"]["name"])
     #print row
