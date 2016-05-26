@@ -3,12 +3,14 @@ import pickle
 import datetime
 from Run import Execution
 import operator
+import math
 
 class Evaluation:
     cache = {}
-    measures = {
+    measures = {}
+    measuresJoined = {}
 
-    }
+    weights = [0.2, 0.2, 0.2, 0.2, 0.2]
 
     def __init__(self):
         self.runner = Execution()
@@ -30,23 +32,119 @@ class Evaluation:
 
         return self.cache[hashQuery]
 
-    def evaluate(self, user, location, hotelId, overallRating):
+    def evaluateJoined(self, user, location, hotelId, overallRating):
         data = self.getMeasures(user, location)
-
         print("Start " + str(user))
 
+        self.measuresJoined[hashlib.sha1(user.encode('utf-8')).hexdigest()] = {}
+
+        weights = self.weights[:]
+        i = 0
+
+        for i,x in enumerate(data["data"]):
+            if x == False or len(x) == 0 or hotelId not in x.keys():
+                amZero = 1
+
+                for j in weights:
+                    if j == 0.0:
+                        amZero += 1
+
+                divisor = (len(weights) - amZero)
+
+                if( divisor == 0 ):
+                    self.measuresJoined[hashlib.sha1(user.encode('utf-8')).hexdigest()] = {
+                        "notMeasured": True
+                    }
+
+                    return
+
+                share = weights[i]/divisor
+                weights[i] = 0
+
+                for j, val in enumerate(weights):
+                    if val != 0.0:
+                        weights[j] += share
+
+        hotelList = {}
+
+        for i, x in enumerate(data["data"]):
+            if weights[i] > 0.0:
+                for j in x.keys():
+                    if math.isnan(x[j]):
+                        continue
+
+                    if j not in hotelList:
+                        hotelList[j] = x[j] * weights[i]
+                    else:
+                        hotelList[j] += x[j] * weights[i]
+
+        sorted_x = sorted(hotelList.items(), key=operator.itemgetter(1), reverse=True)
+
+        recommendations = [x[0] for x in sorted_x]
+        index = recommendations.index(hotelId)
+
+        _ndpm = self.ndpm(recommendations, hotelId)
+        _rScore = self.rScore(index)
+        _isInK = self.isInK(recommendations, hotelId)
+
+        if (overallRating == 1 or overallRating == 2):
+            self.measuresJoined[hashlib.sha1(user.encode('utf-8')).hexdigest()][i] = {
+                "reverse": True,
+                "ndpm": 1 - _ndpm,
+                "rScore": 1 - _rScore,
+                "isInK": not _isInK
+            }
+        else:
+            self.measuresJoined[hashlib.sha1(user.encode('utf-8')).hexdigest()][i] = {
+                "reverse": False,
+                "ndpm": _ndpm,
+                "rScore": _rScore,
+                "isInK": _isInK
+            }
+
+    def evaluateDistinct(self, user, location, hotelId, overallRating):
+        data = self.getMeasures(user, location)
+        print("Start " + str(user))
+
+        self.measures[hashlib.sha1(user.encode('utf-8')).hexdigest()] = {}
+        i = 0
+
         for x in data["data"]:
-            if x != False and len(x) > 0:
+            if x != False and len(x) > 0 and hotelId in x.keys():
                 sorted_x = sorted(x.items(), key=operator.itemgetter(1), reverse=True)
 
-                print(sorted_x)
-                print(hotelId)
-                print(overallRating)
+                recommendations = [x[0] for x in sorted_x]
+                index = recommendations.index(hotelId)
 
-                
+                _ndpm = self.ndpm(recommendations, hotelId)
+                _rScore = self.rScore(index)
+                _isInK = self.isInK(recommendations, hotelId)
 
+                if ( overallRating == 1 or overallRating == 2 ):
+                    self.measures[hashlib.sha1(user.encode('utf-8')).hexdigest()][i] = {
+                        "reverse": True,
+                        "ndpm": 1 - _ndpm,
+                        "rScore": 1 - _rScore,
+                        "isInK": not _isInK
+                    }
+                else:
+                    self.measures[hashlib.sha1(user.encode('utf-8')).hexdigest()][i] = {
+                        "reverse": False,
+                        "ndpm": _ndpm,
+                        "rScore": _rScore,
+                        "isInK": _isInK
+                    }
             else:
-                print("No measure!")
+                self.measures[hashlib.sha1(user.encode('utf-8')).hexdigest()][i] = {
+                    "notMeasured": True,
+                    "ndpm": -1,
+                    "rScore": -1,
+                    "isInK": False
+                }
+
+            i += 1
+
+        del self.cache[hashlib.sha1(user.encode('utf-8') + "-" + location.encode('utf-8')).hexdigest()]
 
     def checkFileSystem(self, hash):
         if hash in self.cache:
