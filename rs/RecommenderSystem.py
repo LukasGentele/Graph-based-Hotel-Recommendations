@@ -4,6 +4,7 @@ from DbRequests import DbRequests
 from scipy.stats import pearsonr
 from sklearn.preprocessing import MinMaxScaler
 import numpy as np
+import itertools
 import json
 import pprint
 import random
@@ -292,9 +293,26 @@ class RecommenderSystem:
             for rating in temp:
                 user_hotel_rating.append(rating)
             hotel_matrix = hotel_list_with_other_user[i]
+
             for other_user_rating in hotel_matrix:
-                confidence = pearsonr(user_hotel_rating[1:7], other_user_rating[1:7])[0]
-                if np.isnan(confidence) or confidence <= 0:
+                temp_other_user = other_user_rating[1:7]
+                temp_user = user_hotel_rating[1:7]
+
+                bitmask = list()
+                for j in range(len(temp_user)):
+                    if temp_user[j] < 1 or temp_other_user[j] < 1:
+                        bitmask.append(0)
+                    else:
+                        bitmask.append(1)
+
+                temp_user = list(itertools.compress(temp_user, bitmask))
+                temp_other_user = list(itertools.compress(temp_other_user, bitmask))
+
+                if len(temp_user) == 0:
+                    confidence = 0
+                else:
+                    confidence = pearsonr(temp_user, temp_other_user)[0]
+                if np.isnan(confidence) or float(confidence) <= float(0):
                     confidence = 0
 
                 similarity_score.append((other_user_rating[0], confidence))
@@ -314,7 +332,10 @@ class RecommenderSystem:
                 if rating > 3:
                     hotel_id = row[1]["data"]["id"]
                     rating = (rating * filtered_scores[key])/float(5)
-                    hotel_scores[hotel_id] = rating
+                    if hotel_id in hotel_scores.keys():
+                        hotel_scores[hotel_id] = max(rating, hotel_scores[hotel_id])
+                    else:
+                        hotel_scores[hotel_id] = rating
 
         #for key in hotel_scores.keys():
         #    print(key, hotel_scores[key])
@@ -323,12 +344,12 @@ class RecommenderSystem:
 
     def get_rating_values_from_review(self, review):
         return_list = list()
-        return_list.append(review["ratingService"])
-        return_list.append(review["ratingLocation"])
-        return_list.append(review["ratingSleepQuality"])
-        return_list.append(review["ratingValue"])
-        return_list.append(review["ratingCleanliness"])
-        return_list.append(review["ratingRooms"])
+        return_list.append(int(review["ratingService"]))
+        return_list.append(int(review["ratingLocation"]))
+        return_list.append(int(review["ratingSleepQuality"]))
+        return_list.append(int(review["ratingValue"]))
+        return_list.append(int(review["ratingCleanliness"]))
+        return_list.append(int(review["ratingRooms"]))
         return return_list
 
     def weighted_mean(self, x, w):
