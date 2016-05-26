@@ -229,12 +229,36 @@ class RecommenderSystem:
             temp_list = list()
 
             temp_list.append(key)
-            temp_list.append(np.mean(self.remove_mv(temp_dic["ratingService"])))
-            temp_list.append(np.mean(self.remove_mv(temp_dic["ratingLocation"])))
-            temp_list.append(np.mean(self.remove_mv(temp_dic["ratingSleepQuality"])))
-            temp_list.append(np.mean(self.remove_mv(temp_dic["ratingValue"])))
-            temp_list.append(np.mean(self.remove_mv(temp_dic["ratingCleanliness"])))
-            temp_list.append(np.mean(self.remove_mv(temp_dic["ratingRooms"])))
+
+            if len(self.remove_mv(temp_dic["ratingService"])) == 0:
+                temp_list.append(1)
+            else:
+                temp_list.append(np.mean(self.remove_mv(temp_dic["ratingService"])))
+
+            if len(self.remove_mv(temp_dic["ratingLocation"])) == 0:
+                temp_list.append(1)
+            else:
+                temp_list.append(np.mean(self.remove_mv(temp_dic["ratingLocation"])))
+
+            if len(self.remove_mv(temp_dic["ratingSleepQuality"])) == 0:
+                temp_list.append(1)
+            else:
+                temp_list.append(np.mean(self.remove_mv(temp_dic["ratingSleepQuality"])))
+
+            if len(self.remove_mv(temp_dic["ratingValue"])) == 0:
+                temp_list.append(1)
+            else:
+                temp_list.append(np.mean(self.remove_mv(temp_dic["ratingValue"])))
+
+            if len(self.remove_mv(temp_dic["ratingCleanliness"])) == 0:
+                temp_list.append(1)
+            else:
+                temp_list.append(np.mean(self.remove_mv(temp_dic["ratingCleanliness"])))
+
+            if len(self.remove_mv(temp_dic["ratingRooms"])) == 0:
+                temp_list.append(1)
+            else:
+                temp_list.append(np.mean(self.remove_mv(temp_dic["ratingRooms"])))
 
             hotel_avgs_list.append(temp_list)
 
@@ -247,8 +271,8 @@ class RecommenderSystem:
             maxi = max(maxi, distance)
             hotel_scores[hotel[0]] = distance
 
-        #for hotel in hotel_scores.keys():
-        #    print(hotel, (1 - (hotel_scores[hotel] / maxi)))
+        for hotel in hotel_scores.keys():
+            hotel_scores[hotel] = (1 - (hotel_scores[hotel] / maxi))
 
         return hotel_scores
 
