@@ -14,6 +14,7 @@ class RecommenderSystem:
     def __init__(self):
         self.db = DbRequests()
         self.blacklist = ["Posted by an Accorhotels.com traveler", "A TripAdvisor Member"]
+        np.seterr(all="ignore")
 
     def sim_measure1(self, location):
         res = self.db.reviews_per_hotel_per_place(location)
@@ -36,9 +37,6 @@ class RecommenderSystem:
 
         for key in hotel_scores.keys():
             hotel_scores[key] = hotel_scores[key] / maxi
-
-        for key in hotel_scores.keys():
-            print(key, hotel_scores[key])
 
         return hotel_scores
 
@@ -335,7 +333,8 @@ class RecommenderSystem:
                 if len(temp_user) == 0:
                     confidence = 0
                 else:
-                    confidence = pearsonr(temp_user, temp_other_user)[0]
+                    confidence = pearsonr(temp_user, temp_other_user)[0].item()
+
                 if np.isnan(confidence) or float(confidence) <= float(0):
                     confidence = 0
 
