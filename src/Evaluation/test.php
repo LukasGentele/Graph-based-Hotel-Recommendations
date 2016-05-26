@@ -66,6 +66,11 @@ function NDPM ($recommendations, $hotelId) {
     $c_minus = max(0, $c_minus);
     $c_u0 = $c_u - ($c_plus + $c_minus);
 
+    echo $c_plus . PHP_EOL;
+    echo $c_minus . PHP_EOL;
+    echo $c_u0 . PHP_EOL;
+    echo $c_u . PHP_EOL;
+
     return abs(($c_minus+0.5*$c_u0)/$c_u) * (($index+1)/2);
 }
 
