@@ -13,7 +13,7 @@ class DbRequests:
                                  username=content[1].replace('\r', '').replace('\n', ''), password=content[2])
 
     def checkCache(self, query):
-        hashQuery = hashlib.sha1(query).hexdigest()
+        hashQuery = hashlib.sha1(query.encode('utf-8')).hexdigest()
 
         if hashQuery not in self.cache and self.checkFileSystem(hashQuery) == False:
             self.cache[hashQuery] = self.run(query)
@@ -37,6 +37,10 @@ class DbRequests:
     def run(self, query):
         return self.gdb.query(query)
 
+    def users_and_hotel_in_location(self, location):
+        q = "MATCH (p:Place {hash: " + location + "})-[:OFFERS]-(h:Hotel)-[:BOOKED_BY]->(u:User) RETURN h.id,u.name LIMIT 10"
+        return self.checkCache(q)
+
     def hotels_in_same_class_in_location(self, hotel, clas):
         q = "MATCH (h1:Hotel {id: \"" + hotel + "\"})-[:LOCATED_IN]-(p:Place)-[:OFFERS]->(h2: Hotel {class: " + str(clas) + "}) RETURN h2"
         #print(q)
@@ -52,12 +56,13 @@ class DbRequests:
         #print(q)
         return self.run(q)
 
-
-    def all_users_for_location(self, user, location):
-        q = "MATCH (p:Place {hash: " + location + "})-[:VISITED_BY]->(u:User) WHERE NOT u.name = \"" + user + "\" RETURN u"
-
-        #print(q)
-        return self.run(q)
+    def all_users_for_location(self, user=None, location=None):
+        if user == None:
+            q = "MATCH (p:Place {hash: " + location + "})-[:VISITED_BY]->(u:User) RETURN u"
+            return self.checkCache(q)
+        else:
+            q = "MATCH (p:Place {hash: " + location + "})-[:VISITED_BY]->(u:User) WHERE NOT u.name = \"" + user + "\" RETURN u"
+            return self.run(q)
 
     def all_users_for_hotel(self, user, hotel):
         q = "MATCH (h:Hotel {id: \"" + hotel + "\"})-[:BOOKED_BY]->(u:User) WHERE NOT u.name = \"" + user + "\" RETURN u"
@@ -79,7 +84,7 @@ class DbRequests:
 
     def reviews_per_hotel_per_place(self, location):
         q = "MATCH (p:Place {hash: " + str(location) + "})-[:OFFERS]->(h:Hotel)-[:RATED_BY]->(r:Review) "\
-                "RETURN h, r"
+                "RETURN h.id, r.ratingOverall, r.ratingService, r.ratingLocation, r.ratingSleepQuality, r.ratingValue, r.ratingCleanliness, r.ratingRooms"
         #print(q)
         return self.checkCache(q)
 

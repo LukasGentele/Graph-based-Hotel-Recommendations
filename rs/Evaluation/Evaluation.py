@@ -70,6 +70,3 @@ class Evaluation:
             return True
         else:
             return False
-
-e = Evaluation()
-print(e.ndpm([1,2,3,6,9], 22))

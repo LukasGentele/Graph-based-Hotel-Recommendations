@@ -20,8 +20,8 @@ class RecommenderSystem:
         hotel_scores = dict()
         for result in res:
             #print(result[0]["data"])
-            node_id = result[0]["data"]["id"]
-            score = result[1]["data"]["ratingOverall"]
+            node_id = result[0]
+            score = result[1]
             if node_id in hotel_scores.keys():
                 tmp_list = hotel_scores[node_id]
                 tmp_list.append(score)
@@ -178,13 +178,13 @@ class RecommenderSystem:
 
         hotel_avg_asp_rating = dict()
         for result in res:
-            node_id = result[0]["data"]["id"]
-            score_service = result[1]["data"]["ratingService"]
-            score_location = result[1]["data"]["ratingLocation"]
-            score_sleep_quality = result[1]["data"]["ratingSleepQuality"]
-            score_value = result[1]["data"]["ratingValue"]
-            score_cleanliness = result[1]["data"]["ratingCleanliness"]
-            score_rooms = result[1]["data"]["ratingRooms"]
+            node_id = result[0]
+            score_service = result[2]
+            score_location = result[3]
+            score_sleep_quality = result[4]
+            score_value = result[5]
+            score_cleanliness = result[6]
+            score_rooms = result[7]
             if node_id in hotel_avg_asp_rating.keys():
                 tmp_dic = hotel_avg_asp_rating[node_id]
 

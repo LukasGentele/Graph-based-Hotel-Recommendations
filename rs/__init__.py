@@ -2,19 +2,31 @@ __author__ = 'Christian'
 
 from Run import Execution
 from DbRequests import DbRequests
-import pickle
+from Evaluation import Evaluation
 
 execc = Execution()
-#db = DbRequests()
+
+# Paris - 2704655808
+# Los Angeles - 1209176819
+
+db = DbRequests()
+
+#res = db.users_and_hotel_in_location("1209176819")
 #res = db.run("MATCH (p:Place{hash: 2704655808})-[:VISITED_BY]->(u:User) RETURN u LIMIT 300")
 
-#users = set()
+users = {}
+
+#res[0]
+
 #for row in res:
-#    users.add(row[0]["data"]["name"])
+    #users.append(row[0]["data"]["name"])
+    #print row
 
 #for user in users:
 
-results = execc.run(user_id="John S", location="2704655808")
+execc.run(user_id="John S", location="2704655808")
+
+
 
 #425097329
 #"John S"
