@@ -1,4 +1,66 @@
+import hashlib
+import pickle
+import datetime
+from Run import Execution
+import operator
+
 class Evaluation:
+    cache = {}
+    measures = {
+
+    }
+
+    def __init__(self):
+        self.runner = Execution()
+
+    def run(self, user, location):
+        a = datetime.datetime.now()
+        result = self.runner.run(user_id=user, location=location)
+        b = datetime.datetime.now()
+
+        return {"data": result,
+                "time": (b - a)}
+
+    def getMeasures(self, user, location):
+        hashQuery = hashlib.sha1(user.encode('utf-8') + "-" + location.encode('utf-8')).hexdigest()
+
+        if hashQuery not in self.cache and self.checkFileSystem(hashQuery) == False:
+            self.cache[hashQuery] = self.run(user, location)
+            self.saveFileSystem(hashQuery)
+
+        return self.cache[hashQuery]
+
+    def evaluate(self, user, location, hotelId, overallRating):
+        data = self.getMeasures(user, location)
+
+        print("Start " + str(user))
+
+        for x in data["data"]:
+            if x != False and len(x) > 0:
+                sorted_x = sorted(x.items(), key=operator.itemgetter(1), reverse=True)
+
+                print(sorted_x)
+                print(hotelId)
+                print(overallRating)
+
+                
+
+            else:
+                print("No measure!")
+
+    def checkFileSystem(self, hash):
+        if hash in self.cache:
+            return True
+
+        try:
+            self.cache[hash] = pickle.load(open("cache/" + hash, "rb"))
+            return True
+        except IOError:
+            return False
+
+    def saveFileSystem(self, hash):
+        pickle.dump(self.cache[hash], open("cache/" + hash, "wb"))
+
     def sgn(self, val):
             if( val > 0 ):
                 return 1.0

@@ -50,6 +50,9 @@ class RecommenderSystem:
                 avg_class = avg_class + hotel_class
                 count += 1
 
+        if count == 0:
+            return False
+
         avg_class = float(avg_class) / count
 
         res = self.db.hotels_per_place(location)
@@ -115,6 +118,9 @@ class RecommenderSystem:
 
     def sim_measure4(self, user_id, location):
         res = self.db.user_reviews_per_hotel(user_id, location)
+
+        if len(res) == 0:
+            return False
 
         user = res[0][0]["data"]
         user_reviews = list()
@@ -290,7 +296,7 @@ class RecommenderSystem:
             res = self.db.users_same_hotel_for_target_location(hotels[i], location, user_id)
             users = list()
             for row in res:
-                users.append(row[0]["data"]["name"])
+                users.append(row[0]["data"]["name"].replace("'", "\\'"))
 
             for blacklisted in self.blacklist:
                 if blacklisted in users:
@@ -392,7 +398,7 @@ class RecommenderSystem:
         return float(sum / float(np.sum(w)))
 
     def weighted_correlation(self, x, y, w):
-        print(x,y,w)
+        #print(x,y,w)
         return float(self.weighted_covariance(x, y, w) / float((np.sqrt((self.weighted_covariance(x, x, w)) * self.weighted_covariance(y, y, w)))))
 
     def weighted_euclidean_distance(self, x, y, w):

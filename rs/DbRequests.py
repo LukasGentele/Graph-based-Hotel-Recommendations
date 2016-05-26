@@ -38,7 +38,7 @@ class DbRequests:
         return self.gdb.query(query)
 
     def users_and_hotel_in_location(self, location):
-        q = "MATCH (p:Place {hash: " + location + "})-[:OFFERS]-(h:Hotel)-[:BOOKED_BY]->(u:User) RETURN h.id,u.name LIMIT 10"
+        q = "MATCH (p:Place {hash: " + location + "})-[:OFFERS]-(h:Hotel)-[:RATED_BY]-(r:Review)-[:WRITTEN_BY]->(u:User) RETURN u.name,h.id,r.ratingOverall"
         return self.checkCache(q)
 
     def hotels_in_same_class_in_location(self, hotel, clas):
@@ -51,7 +51,7 @@ class DbRequests:
         #print(q)
         return self.run(q)
 
-    def reviews_for_user_set(self, hotel,users):
+    def reviews_for_user_set(self, hotel, users):
         q = "MATCH (h: Hotel {id: \"" + hotel + "\"})-[RATED_BY]-(r:Review)-[WRITTEN_BY]->(u:User) WHERE u.name IN ['" + "','".join(users) + "'] RETURN u,r"
         #print(q)
         return self.run(q)
