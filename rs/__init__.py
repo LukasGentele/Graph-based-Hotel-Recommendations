@@ -33,7 +33,7 @@ for row in res:
 
     #users.append(row[0]["data"]["name"])
     #print row
-    if i+j >= 15:
+    if i >= 30:
         break
 
 

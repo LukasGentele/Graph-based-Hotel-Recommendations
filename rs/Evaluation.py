@@ -67,7 +67,7 @@ class Evaluation:
             avgHotelAmount = avgHotelAmount / amount
 
             print("######")
-            print("i: " + str(i))
+            print("i: " + str(i+1))
             print("Amount: " + str(amount))
 
             print("Avg NDPM: " + str(avgNDPM))
