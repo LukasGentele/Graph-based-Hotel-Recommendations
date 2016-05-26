@@ -97,7 +97,7 @@ class RecommenderSystem:
             node_id = result[0]["data"]["id"]
             lower_limit_temp = int(result[0]["data"]["priceLowerLimit"])
             upper_limit_temp = int(result[0]["data"]["priceUpperLimit"])
-            if lower_limit < 1 or upper_limit < 1:
+            if lower_limit_temp < 1 or upper_limit_temp < 1 or lower_limit < 1 or upper_limit < 1:
                 hotel_scores[node_id] = 0
             else:
                 score_lower = 1
@@ -108,7 +108,7 @@ class RecommenderSystem:
 
                 score_upper = 1
                 if upper_limit < upper_limit_temp:
-                    score_upper = 1 - ((upper_limit_temp - upper_limit) / float(upper_limit))
+                    score_upper = 1 - ((upper_limit_temp - upper_limit) / float(upper_limit_temp))
                 elif lower_limit > upper_limit_temp:
                     score_upper = 0
 
@@ -122,14 +122,6 @@ class RecommenderSystem:
         if len(res) == 0:
             return False
 
-        user = res[0][0]["data"]
-        user_reviews = list()
-        hotels = list()
-
-        for i in range(len(res)):
-            user_reviews.append(res[i][1]["data"])
-            hotels.append(res[i][2]["data"])
-
         service_list = list()
         location_list = list()
         sleep_quality_list = list()
@@ -137,28 +129,28 @@ class RecommenderSystem:
         cleanliness_list = list()
         rooms_list = list()
 
-        for review in user_reviews:
-            service = review["ratingService"]
+        for result in res:
+            service = result[1]
             if service > 0:
                 service_list.append(service)
 
-            location_rating = review["ratingLocation"]
+            location_rating = result[2]
             if location_rating > 0:
                 location_list.append(location_rating)
 
-            sleep_quality = review["ratingSleepQuality"]
+            sleep_quality = result[3]
             if sleep_quality > 0:
                 sleep_quality_list.append(sleep_quality)
 
-            value = review["ratingValue"]
+            value = result[4]
             if value > 0:
                 value_list.append(value)
 
-            cleanliness = review["ratingCleanliness"]
+            cleanliness = result[5]
             if cleanliness > 0:
                 cleanliness_list.append(cleanliness)
 
-            rooms = review["ratingRooms"]
+            rooms = result[6]
             if rooms > 0:
                 rooms_list.append(rooms)
 
@@ -286,8 +278,9 @@ class RecommenderSystem:
         reviews = list()
 
         for row in res:
-            hotels.append(row[2]["data"]["id"])
-            reviews.append(row[1]["data"])
+            hotels.append(row[0])
+            reviews.append([row[1],row[2],row[3],row[4],row[5],row[6]])
+
 
         hotel_list_with_other_user = list()
         for i in range(len(hotels)):
@@ -315,7 +308,7 @@ class RecommenderSystem:
 
         similarity_score = list()
         for i in range(len(hotels)):
-            temp = self.get_rating_values_from_review(reviews[i])
+            temp = reviews[i]
             user_hotel_rating = list()
             user_hotel_rating.append(user_id)
             for rating in temp:
@@ -339,7 +332,7 @@ class RecommenderSystem:
                 if len(temp_user) == 0:
                     confidence = 0
                 else:
-                    confidence = pearsonr(temp_user, temp_other_user)[0].item()
+                    confidence = pearsonr(temp_user, temp_other_user)[0]
 
                 if np.isnan(confidence) or float(confidence) <= float(0):
                     confidence = 0
@@ -366,8 +359,9 @@ class RecommenderSystem:
                     else:
                         hotel_scores[hotel_id] = rating
 
-        #for key in hotel_scores.keys():
-        #    print(key, hotel_scores[key])
+        for key in hotel_scores.keys():
+            if np.isnan(hotel_scores[key]):
+                hotel_scores.pop(key, None)
 
         return hotel_scores
 

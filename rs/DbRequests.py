@@ -72,7 +72,7 @@ class DbRequests:
 
     def user_reviews_per_hotel(self, user, location):
         q = "MATCH (u:User {name: \"" + user + "\"})-[:WROTE]-(r:Review)-[g:RATES]-(h:Hotel)-[:LOCATED_IN]->(p:Place) "\
-           + "WHERE NOT p.hash = \"" + location + "\" RETURN u,r,h"
+           + "WHERE NOT p.hash = \"" + location + "\" RETURN h.id, r.ratingService, r.ratingLocation, r.ratingSleepQuality, r.ratingValue, r.ratingCleanliness, r.ratingRooms, u.name"
         #print(q)
         return self.run(q)
 

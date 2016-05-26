@@ -24,7 +24,7 @@ class Evaluation:
                 "time": (b - a)}
 
     def getMeasures(self, user, location):
-        hashQuery = hashlib.sha1(user.encode('utf-8') + "-" + location.encode('utf-8')).hexdigest()
+        hashQuery = hashlib.sha1(user.encode('utf-8')).hexdigest()
 
         if hashQuery not in self.cache and self.checkFileSystem(hashQuery) == False:
             self.cache[hashQuery] = self.run(user, location)
