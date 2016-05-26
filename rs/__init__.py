@@ -2,8 +2,9 @@ __author__ = 'Christian'
 
 from Run import Execution
 from DbRequests import DbRequests
+import pickle
 
-exec = Execution()
+execc = Execution()
 #db = DbRequests()
 #res = db.run("MATCH (p:Place{hash: 2704655808})-[:VISITED_BY]->(u:User) RETURN u LIMIT 300")
 
@@ -13,7 +14,7 @@ exec = Execution()
 
 #for user in users:
 
-results = exec.run(user_id="John S", location="2704655808")
+results = execc.run(user_id="John S", location="2704655808")
 
 #425097329
 #"John S"

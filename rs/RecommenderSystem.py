@@ -9,7 +9,6 @@ import pprint
 import random
 
 
-
 class RecommenderSystem:
     def __init__(self):
         self.db = DbRequests()
@@ -19,7 +18,7 @@ class RecommenderSystem:
         res = self.db.reviews_per_hotel_per_place(location)
         hotel_scores = dict()
         for result in res:
-            print(result[0]["data"])
+            #print(result[0]["data"])
             node_id = result[0]["data"]["id"]
             score = result[1]["data"]["ratingOverall"]
             if node_id in hotel_scores.keys():
@@ -247,8 +246,8 @@ class RecommenderSystem:
             maxi = max(maxi, distance)
             hotel_scores[hotel[0]] = distance
 
-        for hotel in hotel_scores.keys():
-            print(hotel, (1 - (hotel_scores[hotel] / maxi)))
+        #for hotel in hotel_scores.keys():
+        #    print(hotel, (1 - (hotel_scores[hotel] / maxi)))
 
         return hotel_scores
 
@@ -317,8 +316,8 @@ class RecommenderSystem:
                     rating = (rating * filtered_scores[key])/float(5)
                     hotel_scores[hotel_id] = rating
 
-        for key in hotel_scores.keys():
-            print(key, hotel_scores[key])
+        #for key in hotel_scores.keys():
+        #    print(key, hotel_scores[key])
 
         return hotel_scores
 
