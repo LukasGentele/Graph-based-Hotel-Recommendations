@@ -365,6 +365,25 @@ class RecommenderSystem:
 
         return hotel_scores
 
+    def sim_measure6(self, user_id, location):
+        res = self.db.nationality_majoriy_voting()
+
+        hotel_scores = dict()
+
+        maxi = res[0][1]
+        for row in res:
+            hotel_scores[row[0]] = float(row[1]) / float(maxi)
+
+        return hotel_scores
+
+
+
+
+
+
+
+
+
     def get_rating_values_from_review(self, review):
         return_list = list()
         return_list.append(int(review["ratingService"]))
