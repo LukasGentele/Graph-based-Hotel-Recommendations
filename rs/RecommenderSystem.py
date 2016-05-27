@@ -389,14 +389,6 @@ class RecommenderSystem:
 
         return hotel_scores
 
-
-
-
-
-
-
-
-
     def get_rating_values_from_review(self, review):
         return_list = list()
         return_list.append(int(review["ratingService"]))

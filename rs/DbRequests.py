@@ -102,3 +102,11 @@ class DbRequests:
         q = "MATCH (u:User {name: \"" + user + "\"})-[:WROTE]-(r:Review)-[:RATES]-(h:Hotel)-[:LOCATED_IN]->(p:Place {hash: "+location+"}) RETURN r.ratingOverall,h.id"
         #print(q)
         return self.checkCache(q)
+
+    def nationality_majoriy_voting(self, user, location):
+         q = "MATCH (u:User)-[:HAS_VISITED]->(p:Place {hash: " + location + "}) MATCH (u)-[:IS_CITIZEN_OF]->\
+            (c:Country)<-[:IS_CITIZEN_OF]-(reqUser:User {name: \"" + user + "\"}) WHERE u.name <> \"" + user + "\" \
+            MATCH (u)-[:WROTE]->(r:Review)-[:RATES]->(h:Hotel) WITH r,h \
+            RETURN DISTINCT h.id, SUM(r.ratingOverall) as sumRating ORDER BY sumRating DESC"
+         #print(q)
+         return self.run(q)
