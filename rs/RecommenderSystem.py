@@ -19,6 +19,7 @@ class RecommenderSystem:
     def sim_measure1(self, location):
         #print("Measure 1")
         res = self.db.reviews_per_hotel_per_place(location)
+
         hotel_scores = dict()
         for result in res:
             #print(result[0]["data"])
@@ -30,6 +31,7 @@ class RecommenderSystem:
                 hotel_scores[node_id] = tmp_list
             else:
                 hotel_scores[node_id] = [score]
+
         maxi = 0
         for key in hotel_scores.keys():
             avg_score = np.mean(hotel_scores[key])
@@ -277,13 +279,13 @@ class RecommenderSystem:
         return hotel_scores
 
     def sim_measure5(self, user_id, location):
-        print("Measure 5")
+        #print("Measure 5")
         res = self.db.user_reviews_per_hotel(user_id, location)
         hotels = list()
         reviews = list()
 
         maxReviews = 100
-        print(len(res))
+        #print(len(res))
 
         for row in res:
             hotels.append(row[0])
@@ -379,7 +381,10 @@ class RecommenderSystem:
         return hotel_scores
 
     def sim_measure6(self, user_id, location):
-        res = self.db.nationality_majoriy_voting()
+        res = self.db.nationality_majoriy_voting(user_id, location)
+
+        if res == False:
+            return {}
 
         hotel_scores = dict()
 

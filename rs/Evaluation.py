@@ -2,6 +2,7 @@ import hashlib
 import pickle
 import datetime
 from Run import Execution
+from DbRequests import DbRequests
 import operator
 import math
 
@@ -10,7 +11,7 @@ class Evaluation:
     measures = {}
     measuresJoined = {}
 
-    weights = [0.2, 0.2, 0.2, 0.2, 0.2]
+    weights = [0.2, 0.2, 0.2, 0.2, 0.2, 0.2]
 
     blacklist = [
         "A TripAdvisor Member",
@@ -37,45 +38,137 @@ class Evaluation:
 
     def __init__(self):
         self.runner = Execution()
+        self.db = DbRequests()
 
-    def run(self, user, location):
+    def preprocessForEvaluation(self, result, user, location, hotelId, time):
+        i = 0
+
+        hotelAmount = len(result[0])
+        retArr = []
+
+        for x in result:
+            if x != False and len(x) > 0:
+                sorted_x = sorted(x.items(), key=operator.itemgetter(1), reverse=True)
+
+                recommendations = [x[0] for x in sorted_x]
+                addedRecommendations = []
+
+                if hotelAmount > len(recommendations):
+                    if i == 0:
+                        raise AssertionError('Measure 1 returned wrong results!')
+
+                    for k in retArr[0]["ranking"]:
+                        if k not in recommendations:
+                            recommendations.append(k)
+                            addedRecommendations.append(k)
+
+                            if len(recommendations) == hotelAmount:
+                                break
+                elif hotelAmount < len(recommendations):
+                    for k in recommendations:
+                        if k not in retArr[0]["ranking"]:
+                            del recommendations[recommendations.index(k)]
+
+                index = recommendations.index(hotelId)
+
+                _ndpm = self.ndpm(recommendations, hotelId)
+                _rScore = self.rScore(index)
+                _isInK = self.isInK(recommendations, hotelId)
+
+                retArr.append({
+                    "user": user,
+                    "location": location,
+                    "hotelId": hotelId,
+                    "ranking": recommendations,
+                    "values": [x[1] for x in sorted_x],
+                    "appended": addedRecommendations,
+                    "ndpm": _ndpm,
+                    "rScore": _rScore,
+                    "isInK": _isInK,
+                    "position": index,
+                    "hotelAmount": hotelAmount,
+                    "time": time
+                })
+            else:
+                retArr.append({
+                    "user": user,
+                    "location": location,
+                    "hotelId": hotelId,
+                    "notMeasured": True,
+                    "time": time
+                })
+
+            i += 1
+
+        return retArr
+
+    def run(self, user, location, hotelId):
         a = datetime.datetime.now()
         result = self.runner.run(user_id=user, location=location)
         b = datetime.datetime.now()
 
-        return {"data": result,
-                "time": (b - a)}
+        result = self.preprocessForEvaluation(result, user, location, hotelId, (b-a).total_seconds())
 
-    def getMeasures(self, user, location):
-        hashQuery = hashlib.sha1(user.encode('utf-8') + location.encode('utf-8')).hexdigest()
+        return result
+
+    def getMeasures(self, user, location, hotelId):
+        hashQuery = hashlib.sha1(user.encode('utf-8') + location.encode('utf-8') + str(hotelId).encode('utf-8')).hexdigest()
 
         if hashQuery not in self.cache and self.checkFileSystem(hashQuery) == False:
-            self.cache[hashQuery] = self.run(user, location)
+            self.cache[hashQuery] = self.run(user, location, hotelId)
             self.saveFileSystem(hashQuery)
 
         return self.cache[hashQuery]
 
-    def printAggregatedDistinct(self):
+    def printCSV(self, delimiter=";"):
+        print "UserName" + delimiter + "PlaceHash" + delimiter + "VisitedHotelId" + delimiter + "HotelId" + delimiter + "Measure1" + delimiter\
+              + "Measure2" + delimiter + "Measure3" + delimiter + "Measure4" + delimiter + "Measure5" + delimiter + "Measure6"
 
+        for x in self.measures:
+            x = self.measures[x]
+
+            hotelAmount = x[0]["hotelAmount"]
+
+            for i in range(hotelAmount):
+                curHotelId = x[0]["ranking"][i]
+
+                _str = str(x[0]["user"]) + delimiter + str(x[0]["location"]) + delimiter + str(x[0]["hotelId"]) + delimiter + str(curHotelId) + delimiter + str(x[0]["values"][i])
+
+                h = 0
+                for y in x:
+                    if h > 0:
+                        if "notMeasured" in y or curHotelId in y["appended"]:
+                            _str += delimiter + "-1"
+                        else:
+                            _str += delimiter + str(y["values"][y["ranking"].index(curHotelId)])
+
+                    h += 1
+
+                print _str
+        return
+
+    def printAggregatedDistinct(self):
         for i in range(len(self.weights)):
             avgNDPM = 0.0
             avgRScore = 0.0
             avgInK = 0.0
             avgPosition = 0.0
             avgHotelAmount = 0.0
+            avgTime = 0.0
 
             amount = 0
 
             for x in self.measures:
                 x = self.measures[x][i]
 
-                if x["ndpm"] >= 0:
+                if "notMeasured" not in x:
                     amount += 1
 
                     avgNDPM += x["ndpm"]
                     avgHotelAmount += x["hotelAmount"]
                     avgRScore += x["rScore"]
                     avgPosition += x["position"]
+                    avgTime += x["time"]
 
                     if x["isInK"] == True:
                         avgInK += 1
@@ -88,6 +181,7 @@ class Evaluation:
             avgInK = avgInK / amount
             avgPosition = avgPosition / amount
             avgHotelAmount = avgHotelAmount / amount
+            avgTime = avgTime / amount
 
             print("######")
             print("Measure: " + str(i+1))
@@ -97,6 +191,7 @@ class Evaluation:
             print("Avg RScore: " + str(avgRScore))
             print("Avg InK: " + str(avgInK))
             print("Avg Position: " + str(avgPosition))
+            print("Avg Time: " + str(avgTime))
             print("HotelAmount: " + str(avgHotelAmount))
 
     def printAggregatedJoined(self):
@@ -209,60 +304,15 @@ class Evaluation:
             "time": data["time"]
         }
 
-    def evaluateDistinct(self, user, location, hotelId, overallRating):
+    def evaluateDistinct(self, user, location, hotelId):
         if user in self.blacklist:
             return
 
         #print("Start " + str(user))
-        data = self.getMeasures(user, location)
 
-        self.measures[hashlib.sha1(user.encode('utf-8')).hexdigest()] = {}
-        i = 0
+        self.measures[hashlib.sha1(user.encode('utf-8')).hexdigest()] = self.getMeasures(user, location, hotelId)
 
-        hotelAmount = 0
-
-        for x in data["data"]:
-            if x != False and len(x) > 0 and hotelId in x.keys():
-                if i == 0:
-                    hotelAmount = len(x)
-
-                if hotelAmount > 0:
-                    while len(x) < hotelAmount:
-                        x.append({'-1': 0.0})
-
-                if (overallRating == 1 or overallRating == 2):
-                    sorted_x = sorted(x.items(), key=operator.itemgetter(1), reverse=True)
-                else:
-                    sorted_x = sorted(x.items(), key=operator.itemgetter(1))
-
-                recommendations = [x[0] for x in sorted_x]
-                index = recommendations.index(hotelId)
-
-                _ndpm = self.ndpm(recommendations, hotelId)
-                _rScore = self.rScore(index)
-                _isInK = self.isInK(recommendations, hotelId)
-
-                self.measures[hashlib.sha1(user.encode('utf-8')).hexdigest()][i] = {
-                    "ndpm": _ndpm,
-                    "rScore": _rScore,
-                    "isInK": _isInK,
-                    "position": index,
-                    "hotelAmount": hotelAmount,
-                    "time": data["time"]
-                }
-            else:
-                self.measures[hashlib.sha1(user.encode('utf-8')).hexdigest()][i] = {
-                    "notMeasured": True,
-                    "ndpm": -1,
-                    "rScore": -1,
-                    "isInK": False,
-                    "hotelAmount": hotelAmount,
-                    "time": data["time"]
-                }
-
-            i += 1
-
-        del self.cache[hashlib.sha1(user.encode('utf-8') + location.encode('utf-8')).hexdigest()]
+        #del self.cache[hashlib.sha1(user.encode('utf-8') + location.encode('utf-8')).hexdigest()]
 
     def checkFileSystem(self, hash):
         if hash in self.cache:
