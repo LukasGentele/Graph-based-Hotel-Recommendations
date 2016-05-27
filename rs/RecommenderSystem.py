@@ -2,12 +2,8 @@ __author__ = 'Christian'
 
 from DbRequests import DbRequests
 from scipy.stats import pearsonr
-from sklearn.preprocessing import MinMaxScaler
 import numpy as np
 import itertools
-import json
-import pprint
-import random
 
 
 class RecommenderSystem:
@@ -167,12 +163,35 @@ class RecommenderSystem:
         cleanliness_var = np.var(cleanliness_list)
         rooms_var = np.var(rooms_list)
 
-        service_mean = np.mean(service_list)
-        location_mean = np.mean(location_list)
-        sleep_quality_mean = np.mean(sleep_quality_list)
-        value_mean = np.mean(value_list)
-        cleanliness_mean = np.mean(cleanliness_list)
-        rooms_mean = np.mean(rooms_list)
+        if len(service_list) == 0:
+            service_mean = 3
+        else:
+            service_mean = np.mean(service_list)
+
+        if len(location_list) == 0:
+            location_mean = 3
+        else:
+            location_mean = np.mean(location_list)
+
+        if len(sleep_quality_list) == 0:
+            sleep_quality_mean = 3
+        else:
+            sleep_quality_mean = np.mean(sleep_quality_list)
+
+        if len(value_list) == 0:
+            value_mean = 3
+        else:
+            value_mean = np.mean(value_list)
+
+        if len(cleanliness_list) == 0:
+            cleanliness_mean = 3
+        else:
+            cleanliness_mean = np.mean(cleanliness_list)
+
+        if len(rooms_list) == 0:
+            rooms_mean = 3
+        else:
+            rooms_mean = np.mean(rooms_list)
 
         weights = [service_var, location_var, sleep_quality_var, value_var, cleanliness_var, rooms_var]
 
