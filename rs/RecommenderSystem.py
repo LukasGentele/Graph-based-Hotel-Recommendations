@@ -98,7 +98,7 @@ class RecommenderSystem:
             node_id = result[0]
             lower_limit_temp = int(result[2])
             upper_limit_temp = int(result[3])
-            if lower_limit_temp < 1 or upper_limit_temp < 1 or lower_limit < 1 or upper_limit < 1:
+            if lower_limit_temp < 1 or upper_limit_temp < 1 or lower_limit < 1 or upper_limit < 1 or str(lower_limit) == "nan" or str(upper_limit) == "nan":
                 hotel_scores[node_id] = 0
             else:
                 score_lower = 1
