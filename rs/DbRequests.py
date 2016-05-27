@@ -72,13 +72,13 @@ class DbRequests:
 
     def user_reviews_per_hotel(self, user, location):
         q = "MATCH (u:User {name: \"" + user + "\"})-[:WROTE]-(r:Review)-[g:RATES]-(h:Hotel)-[:LOCATED_IN]->(p:Place) "\
-           + "WHERE NOT p.hash = \"" + location + "\" RETURN h.id, r.ratingService, r.ratingLocation, r.ratingSleepQuality, r.ratingValue, r.ratingCleanliness, r.ratingRooms, u.name"
+           + "WHERE NOT p.hash = " + location + " RETURN h.id, r.ratingService, r.ratingLocation, r.ratingSleepQuality, r.ratingValue, r.ratingCleanliness, r.ratingRooms, u.name"
         #print(q)
         return self.run(q)
 
     def user_reviews_per_hotel_sim2(self, user, location):
         q = "MATCH (u:User {name: \"" + user + "\"})-[:WROTE]-(r:Review)-[g:RATES]-(h:Hotel)-[:LOCATED_IN]->(p:Place) \
-            WHERE NOT p.hash = \"" + location + "\" RETURN h"
+            WHERE NOT p.hash = " + location + " RETURN h.class,h.priceLowerLimit,h.priceUpperLimit"
         #print(q)
         return self.run(q)
 
@@ -89,7 +89,7 @@ class DbRequests:
         return self.checkCache(q)
 
     def hotels_per_place(self, location):
-        q = "MATCH (h:Hotel)-[:LOCATED_IN]->(p:Place {hash:" + location + "}) RETURN h"
+        q = "MATCH (h:Hotel)-[:LOCATED_IN]->(p:Place {hash:" + location + "}) RETURN h.id,h.class,h.priceLowerLimit,h.priceUpperLimit"
         #print(q)
         return self.checkCache(q)
 
@@ -99,6 +99,6 @@ class DbRequests:
         return self.run(q)
 
     def hotel_review_for_user_and_location(self, user, location):
-        q = "MATCH (u:User {name: \"" + user + "\"})-[:WROTE]-(r:Review)-[:RATES]-(h:Hotel)-[:LOCATED_IN]->(p:Place {hash: "+location+"}) RETURN r,h"
+        q = "MATCH (u:User {name: \"" + user + "\"})-[:WROTE]-(r:Review)-[:RATES]-(h:Hotel)-[:LOCATED_IN]->(p:Place {hash: "+location+"}) RETURN r.ratingOverall,h.id"
         #print(q)
         return self.checkCache(q)

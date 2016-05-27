@@ -12,6 +12,29 @@ class Evaluation:
 
     weights = [0.2, 0.2, 0.2, 0.2, 0.2]
 
+    blacklist = [
+        "A TripAdvisor Member",
+        "lass=",
+        "Posted by a La Quinta traveler",
+        "Bus_Travel_TX",
+        "Posted by an Easytobook.com traveler",
+        "Posted by an Accorhotels.com traveler",
+        "Posted by a cheaprooms.com traveler",
+        "Posted by a Worldhotels.com traveler",
+        "Posted by a Virgin Holidays traveler",
+        "Posted by an OctopusTravel traveler",
+        "Posted by a Hotell.no traveler",
+        "Posted by a Husa Hoteles traveler",
+        "Posted by a Best Western traveler",
+        "Posted by a Langham Hotels traveler",
+        "Posted by a trip.ru traveler",
+        "Posted by a BanyanTree.com traveler",
+        "Posted by a Deutsche Bahn traveler",
+        "Posted by a Partner traveler",
+        "Posted by a Cleartrip traveler",
+        "Posted by a Wyndham Hotel Group traveler"
+    ]
+
     def __init__(self):
         self.runner = Execution()
 
@@ -67,7 +90,7 @@ class Evaluation:
             avgHotelAmount = avgHotelAmount / amount
 
             print("######")
-            print("i: " + str(i+1))
+            print("Measure: " + str(i+1))
             print("Amount: " + str(amount))
 
             print("Avg NDPM: " + str(avgNDPM))
@@ -112,8 +135,11 @@ class Evaluation:
         print("Avg Position: " + str(avgPosition))
 
     def evaluateJoined(self, user, location, hotelId, overallRating):
+        if user in self.blacklist:
+            return
+
+        #print("Start " + str(user))
         data = self.getMeasures(user, location)
-        print("Start " + str(user))
 
         weights = self.weights[:]
         i = 0
@@ -184,8 +210,11 @@ class Evaluation:
         }
 
     def evaluateDistinct(self, user, location, hotelId, overallRating):
+        if user in self.blacklist:
+            return
+
+        #print("Start " + str(user))
         data = self.getMeasures(user, location)
-        print("Start " + str(user))
 
         self.measures[hashlib.sha1(user.encode('utf-8')).hexdigest()] = {}
         i = 0
@@ -197,6 +226,10 @@ class Evaluation:
                 if i == 0:
                     hotelAmount = len(x)
 
+                if hotelAmount > 0:
+                    while len(x) < hotelAmount:
+                        x.append({'-1': 0.0})
+
                 if (overallRating == 1 or overallRating == 2):
                     sorted_x = sorted(x.items(), key=operator.itemgetter(1), reverse=True)
                 else:
@@ -204,10 +237,6 @@ class Evaluation:
 
                 recommendations = [x[0] for x in sorted_x]
                 index = recommendations.index(hotelId)
-
-                if hotelAmount > 0:
-                    while len(recommendations) < hotelAmount:
-                        recommendations.append(-1)
 
                 _ndpm = self.ndpm(recommendations, hotelId)
                 _rScore = self.rScore(index)
@@ -218,7 +247,8 @@ class Evaluation:
                     "rScore": _rScore,
                     "isInK": _isInK,
                     "position": index,
-                    "hotelAmount": hotelAmount
+                    "hotelAmount": hotelAmount,
+                    "time": data["time"]
                 }
             else:
                 self.measures[hashlib.sha1(user.encode('utf-8')).hexdigest()][i] = {
@@ -226,7 +256,8 @@ class Evaluation:
                     "ndpm": -1,
                     "rScore": -1,
                     "isInK": False,
-                    "hotelAmount": hotelAmount
+                    "hotelAmount": hotelAmount,
+                    "time": data["time"]
                 }
 
             i += 1

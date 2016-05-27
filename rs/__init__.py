@@ -25,15 +25,18 @@ j = 0
 for row in res:
     if row[2] == 1 or row[2] == 2:
         j += 1
-        #evaluate.evaluateDistinct(row[0], "1209176819", row[1], row[2])
+        print("User(" + str(j) + "): " + row[0])
+        evaluate.evaluateDistinct(row[0], "1209176819", row[1], row[2])
 
     if row[2] == 5:
+    #if row[0] == "A TripAdvisor Member":
         i += 1
-        evaluate.evaluateDistinct(row[0], "1209176819", row[1], row[2])
+        #print("User(" + str(i) + "): " + row[0])
+        #evaluate.evaluateDistinct(row[0], "1209176819", row[1], row[2])
 
     #users.append(row[0]["data"]["name"])
     #print row
-    if i >= 30:
+    if j >= 10:
         break
 
 

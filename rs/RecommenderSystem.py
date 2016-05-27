@@ -17,6 +17,7 @@ class RecommenderSystem:
         np.seterr(all="ignore")
 
     def sim_measure1(self, location):
+        #print("Measure 1")
         res = self.db.reviews_per_hotel_per_place(location)
         hotel_scores = dict()
         for result in res:
@@ -41,11 +42,12 @@ class RecommenderSystem:
         return hotel_scores
 
     def sim_measure2(self, user_id, location):
+        #print("Measure 2")
         res = self.db.user_reviews_per_hotel_sim2(user_id, location)
         count = 0
         avg_class = 0
         for result in res:
-            hotel_class = result[0]["data"]["class"]
+            hotel_class = result[0]
             if 0 < hotel_class < 6:
                 avg_class = avg_class + hotel_class
                 count += 1
@@ -60,8 +62,8 @@ class RecommenderSystem:
         hotel_scores = dict()
         maxi = 0
         for result in res:
-            node_id = result[0]["data"]["id"]
-            hotel_class = result[0]["data"]["class"]
+            node_id = result[0]
+            hotel_class = result[1]
             class_distance = abs(avg_class - hotel_class)
             maxi = max(maxi, class_distance)
             hotel_scores[node_id] = class_distance
@@ -72,13 +74,14 @@ class RecommenderSystem:
         return hotel_scores
 
     def sim_measure3(self, user_id, location):
+        #print("Measure 3")
         res = self.db.user_reviews_per_hotel_sim2(user_id, location)
 
         lower_limit = list()
         upper_limit = list()
         for result in res:
-            lower_limit_temp = int(result[0]["data"]["priceLowerLimit"])
-            upper_limit_temp = int(result[0]["data"]["priceUpperLimit"])
+            lower_limit_temp = int(result[1])
+            upper_limit_temp = int(result[2])
 
             if lower_limit_temp < 1:
                 continue
@@ -94,9 +97,9 @@ class RecommenderSystem:
 
         hotel_scores = dict()
         for result in res:
-            node_id = result[0]["data"]["id"]
-            lower_limit_temp = int(result[0]["data"]["priceLowerLimit"])
-            upper_limit_temp = int(result[0]["data"]["priceUpperLimit"])
+            node_id = result[0]
+            lower_limit_temp = int(result[2])
+            upper_limit_temp = int(result[3])
             if lower_limit_temp < 1 or upper_limit_temp < 1 or lower_limit < 1 or upper_limit < 1:
                 hotel_scores[node_id] = 0
             else:
@@ -117,6 +120,7 @@ class RecommenderSystem:
         return hotel_scores
 
     def sim_measure4(self, user_id, location):
+        #print("Measure 4")
         res = self.db.user_reviews_per_hotel(user_id, location)
 
         if len(res) == 0:
@@ -273,13 +277,22 @@ class RecommenderSystem:
         return hotel_scores
 
     def sim_measure5(self, user_id, location):
+        print("Measure 5")
         res = self.db.user_reviews_per_hotel(user_id, location)
         hotels = list()
         reviews = list()
 
+        maxReviews = 100
+        print(len(res))
+
         for row in res:
             hotels.append(row[0])
             reviews.append([row[1],row[2],row[3],row[4],row[5],row[6]])
+
+            maxReviews -= 1
+
+            if maxReviews <= 0:
+                return {}
 
 
         hotel_list_with_other_user = list()
@@ -350,9 +363,9 @@ class RecommenderSystem:
         for key in filtered_scores.keys():
             res = self.db.hotel_review_for_user_and_location(key,location)
             for row in res:
-                rating = row[0]["data"]["ratingOverall"]
+                rating = row[0]
                 if rating > 3:
-                    hotel_id = row[1]["data"]["id"]
+                    hotel_id = row[1]
                     rating = (rating * filtered_scores[key])/float(5)
                     if hotel_id in hotel_scores.keys():
                         hotel_scores[hotel_id] = max(rating, hotel_scores[hotel_id])
