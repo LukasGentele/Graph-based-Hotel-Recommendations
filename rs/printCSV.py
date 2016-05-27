@@ -2,9 +2,10 @@ from DbRequests import DbRequests
 from Evaluation import Evaluation
 import sys
 
+
 def main(argv):
     if len(argv) < 2 or len(argv) > 3:
-        print "Usage: python printCSV.py [locationId] [userLimit] [userOffset]"
+        print("Usage: python printCSV.py [locationId] [userLimit] [userOffset]")
         sys.exit(2)
 
     db = DbRequests()

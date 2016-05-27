@@ -156,12 +156,32 @@ class RecommenderSystem:
             if rooms > 0:
                 rooms_list.append(rooms)
 
+        small_number = 0.00000001
+
         service_var = np.var(service_list)
+        if service_var == 0 or str(service_var) == "nan":
+            service_var = small_number
+
         location_var = np.var(location_list)
+        if location_var == 0 or str(location_var) == "nan":
+            location_var = small_number
+
         sleep_quality_var = np.var(sleep_quality_list)
+        if sleep_quality_var == 0 or str(sleep_quality_var) == "nan":
+            sleep_quality_var = small_number
+
         value_var = np.var(value_list)
+        if value_var == 0 or str(value_var) == "nan":
+            value_var = small_number
+
         cleanliness_var = np.var(cleanliness_list)
+        if cleanliness_var == 0 or str(cleanliness_var) == "nan":
+            cleanliness_var = small_number
+
         rooms_var = np.var(rooms_list)
+        if rooms_var == 0 or str(rooms_var) == "nan":
+            rooms_var = small_number
+
 
         if len(service_list) == 0:
             service_mean = 3
@@ -252,32 +272,32 @@ class RecommenderSystem:
             temp_list.append(key)
 
             if len(self.remove_mv(temp_dic["ratingService"])) == 0:
-                temp_list.append(1)
+                temp_list.append(3)
             else:
                 temp_list.append(np.mean(self.remove_mv(temp_dic["ratingService"])))
 
             if len(self.remove_mv(temp_dic["ratingLocation"])) == 0:
-                temp_list.append(1)
+                temp_list.append(3)
             else:
                 temp_list.append(np.mean(self.remove_mv(temp_dic["ratingLocation"])))
 
             if len(self.remove_mv(temp_dic["ratingSleepQuality"])) == 0:
-                temp_list.append(1)
+                temp_list.append(3)
             else:
                 temp_list.append(np.mean(self.remove_mv(temp_dic["ratingSleepQuality"])))
 
             if len(self.remove_mv(temp_dic["ratingValue"])) == 0:
-                temp_list.append(1)
+                temp_list.append(3)
             else:
                 temp_list.append(np.mean(self.remove_mv(temp_dic["ratingValue"])))
 
             if len(self.remove_mv(temp_dic["ratingCleanliness"])) == 0:
-                temp_list.append(1)
+                temp_list.append(3)
             else:
                 temp_list.append(np.mean(self.remove_mv(temp_dic["ratingCleanliness"])))
 
             if len(self.remove_mv(temp_dic["ratingRooms"])) == 0:
-                temp_list.append(1)
+                temp_list.append(3)
             else:
                 temp_list.append(np.mean(self.remove_mv(temp_dic["ratingRooms"])))
 
@@ -294,6 +314,10 @@ class RecommenderSystem:
 
         for hotel in hotel_scores.keys():
             hotel_scores[hotel] = (1 - (hotel_scores[hotel] / maxi))
+
+        for hotel in hotel_scores.keys():
+            if str(hotel_scores[hotel]) == "nan":
+                print(hotel, hotel_scores[hotel])
 
         return hotel_scores
 

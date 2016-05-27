@@ -121,8 +121,8 @@ class Evaluation:
         return self.cache[hashQuery]
 
     def printCSV(self, delimiter=";"):
-        print "UserName" + delimiter + "PlaceHash" + delimiter + "VisitedHotelId" + delimiter + "HotelId" + delimiter + "Measure1" + delimiter\
-              + "Measure2" + delimiter + "Measure3" + delimiter + "Measure4" + delimiter + "Measure5" + delimiter + "Measure6"
+        print("UserName" + delimiter + "PlaceHash" + delimiter + "VisitedHotelId" + delimiter + "HotelId" + delimiter + "Measure1" + delimiter\
+              + "Measure2" + delimiter + "Measure3" + delimiter + "Measure4" + delimiter + "Measure5" + delimiter + "Measure6")
 
         for x in self.measures:
             x = self.measures[x]
@@ -144,7 +144,7 @@ class Evaluation:
 
                     h += 1
 
-                print _str
+                print(_str)
         return
 
     def printAggregatedDistinct(self):
