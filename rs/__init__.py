@@ -25,18 +25,21 @@ j = 0
 for row in res:
     if row[2] == 1 or row[2] == 2:
         j += 1
-        evaluate.evaluateJoined(row[0], "1209176819", row[1], row[2])
-        break
+        #evaluate.evaluateDistinct(row[0], "1209176819", row[1], row[2])
 
     if row[2] == 5:
         i += 1
-        evaluate.evaluateJoined(row[0], "1209176819", row[1], row[2])
-        break
+        evaluate.evaluateDistinct(row[0], "1209176819", row[1], row[2])
 
     #users.append(row[0]["data"]["name"])
     #print row
+    if i >= 30:
+        break
 
-print evaluate.measuresJoined
+
+#print evaluate.measuresJoined
+
+evaluate.printAggregatedDistinct()
 #for user in users:
 #execc.run(user_id="John S", location="2704655808")
 

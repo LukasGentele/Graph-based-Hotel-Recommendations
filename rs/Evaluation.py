@@ -24,7 +24,7 @@ class Evaluation:
                 "time": (b - a)}
 
     def getMeasures(self, user, location):
-        hashQuery = hashlib.sha1(user.encode('utf-8')).hexdigest()
+        hashQuery = hashlib.sha1(user.encode('utf-8') + location.encode('utf-8')).hexdigest()
 
         if hashQuery not in self.cache and self.checkFileSystem(hashQuery) == False:
             self.cache[hashQuery] = self.run(user, location)
@@ -32,11 +32,88 @@ class Evaluation:
 
         return self.cache[hashQuery]
 
+    def printAggregatedDistinct(self):
+
+        for i in range(len(self.weights)):
+            avgNDPM = 0.0
+            avgRScore = 0.0
+            avgInK = 0.0
+            avgPosition = 0.0
+            avgHotelAmount = 0.0
+
+            amount = 0
+
+            for x in self.measures:
+                x = self.measures[x][i]
+
+                if x["ndpm"] >= 0:
+                    amount += 1
+
+                    avgNDPM += x["ndpm"]
+                    avgHotelAmount += x["hotelAmount"]
+                    avgRScore += x["rScore"]
+                    avgPosition += x["position"]
+
+                    if x["isInK"] == True:
+                        avgInK += 1
+
+            if amount == 0:
+                continue
+
+            avgNDPM = avgNDPM / amount
+            avgRScore = avgRScore / amount
+            avgInK = avgInK / amount
+            avgPosition = avgPosition / amount
+            avgHotelAmount = avgHotelAmount / amount
+
+            print("######")
+            print("i: " + str(i+1))
+            print("Amount: " + str(amount))
+
+            print("Avg NDPM: " + str(avgNDPM))
+            print("Avg RScore: " + str(avgRScore))
+            print("Avg InK: " + str(avgInK))
+            print("Avg Position: " + str(avgPosition))
+            print("HotelAmount: " + str(avgHotelAmount))
+
+    def printAggregatedJoined(self):
+        avgNDPM = 0.0
+        avgRScore = 0.0
+        avgInK = 0.0
+        avgPosition = 0.0
+
+        amount = 0
+
+        for x in self.measuresJoined:
+            x = self.measuresJoined[x]
+
+            if x["ndpm"] >= 0:
+                amount += 1
+
+                avgNDPM += x["ndpm"]
+                avgRScore += x["rScore"]
+                avgPosition += x["position"]
+
+                if x["isInK"] == True:
+                    avgInK += 1
+
+        if amount == 0:
+            return
+
+        avgNDPM = avgNDPM / amount
+        avgRScore = avgRScore / amount
+        avgInK = avgInK / amount
+        avgPosition = avgPosition / amount
+
+        print("Amount: " + str(amount))
+        print("Avg NDPM: " + str(avgNDPM))
+        print("Avg RScore: " + str(avgRScore))
+        print("Avg InK: " + str(avgInK))
+        print("Avg Position: " + str(avgPosition))
+
     def evaluateJoined(self, user, location, hotelId, overallRating):
         data = self.getMeasures(user, location)
         print("Start " + str(user))
-
-        self.measuresJoined[hashlib.sha1(user.encode('utf-8')).hexdigest()] = {}
 
         weights = self.weights[:]
         i = 0
@@ -78,7 +155,12 @@ class Evaluation:
                     else:
                         hotelList[j] += x[j] * weights[i]
 
-        sorted_x = sorted(hotelList.items(), key=operator.itemgetter(1), reverse=True)
+        if (overallRating == 1 or overallRating == 2):
+            sorted_x = sorted(hotelList.items(), key=operator.itemgetter(1))
+        else:
+            sorted_x = sorted(hotelList.items(), key=operator.itemgetter(1), reverse=True)
+
+        #print sorted_x
 
         recommendations = [x[0] for x in sorted_x]
         index = recommendations.index(hotelId)
@@ -87,20 +169,19 @@ class Evaluation:
         _rScore = self.rScore(index)
         _isInK = self.isInK(recommendations, hotelId)
 
-        if (overallRating == 1 or overallRating == 2):
-            self.measuresJoined[hashlib.sha1(user.encode('utf-8')).hexdigest()][i] = {
-                "reverse": True,
-                "ndpm": 1 - _ndpm,
-                "rScore": 1 - _rScore,
-                "isInK": not _isInK
-            }
-        else:
-            self.measuresJoined[hashlib.sha1(user.encode('utf-8')).hexdigest()][i] = {
-                "reverse": False,
-                "ndpm": _ndpm,
-                "rScore": _rScore,
-                "isInK": _isInK
-            }
+        #print len(recommendations)
+        #print _ndpm
+        #print index
+        #print _isInK
+
+        self.measuresJoined[hashlib.sha1(user.encode('utf-8')).hexdigest()] = {
+            "reverse": False,
+            "position": index,
+            "ndpm": _ndpm,
+            "rScore": _rScore,
+            "isInK": _isInK,
+            "time": data["time"]
+        }
 
     def evaluateDistinct(self, user, location, hotelId, overallRating):
         data = self.getMeasures(user, location)
@@ -109,42 +190,48 @@ class Evaluation:
         self.measures[hashlib.sha1(user.encode('utf-8')).hexdigest()] = {}
         i = 0
 
+        hotelAmount = 0
+
         for x in data["data"]:
             if x != False and len(x) > 0 and hotelId in x.keys():
-                sorted_x = sorted(x.items(), key=operator.itemgetter(1), reverse=True)
+                if i == 0:
+                    hotelAmount = len(x)
+
+                if (overallRating == 1 or overallRating == 2):
+                    sorted_x = sorted(x.items(), key=operator.itemgetter(1), reverse=True)
+                else:
+                    sorted_x = sorted(x.items(), key=operator.itemgetter(1))
 
                 recommendations = [x[0] for x in sorted_x]
                 index = recommendations.index(hotelId)
+
+                if hotelAmount > 0:
+                    while len(recommendations) < hotelAmount:
+                        recommendations.append(-1)
 
                 _ndpm = self.ndpm(recommendations, hotelId)
                 _rScore = self.rScore(index)
                 _isInK = self.isInK(recommendations, hotelId)
 
-                if ( overallRating == 1 or overallRating == 2 ):
-                    self.measures[hashlib.sha1(user.encode('utf-8')).hexdigest()][i] = {
-                        "reverse": True,
-                        "ndpm": 1 - _ndpm,
-                        "rScore": 1 - _rScore,
-                        "isInK": not _isInK
-                    }
-                else:
-                    self.measures[hashlib.sha1(user.encode('utf-8')).hexdigest()][i] = {
-                        "reverse": False,
-                        "ndpm": _ndpm,
-                        "rScore": _rScore,
-                        "isInK": _isInK
-                    }
+                self.measures[hashlib.sha1(user.encode('utf-8')).hexdigest()][i] = {
+                    "ndpm": _ndpm,
+                    "rScore": _rScore,
+                    "isInK": _isInK,
+                    "position": index,
+                    "hotelAmount": hotelAmount
+                }
             else:
                 self.measures[hashlib.sha1(user.encode('utf-8')).hexdigest()][i] = {
                     "notMeasured": True,
                     "ndpm": -1,
                     "rScore": -1,
-                    "isInK": False
+                    "isInK": False,
+                    "hotelAmount": hotelAmount
                 }
 
             i += 1
 
-        del self.cache[hashlib.sha1(user.encode('utf-8') + "-" + location.encode('utf-8')).hexdigest()]
+        del self.cache[hashlib.sha1(user.encode('utf-8') + location.encode('utf-8')).hexdigest()]
 
     def checkFileSystem(self, hash):
         if hash in self.cache:
@@ -217,6 +304,9 @@ class Evaluation:
         c_plus = max(0.0, c_plus)
         c_minus = max(0.0, c_minus)
         c_u0 = c_u - (c_plus + c_minus)
+
+        if c_u == 0:
+            return 0.0
 
         return abs((c_minus+0.5*c_u0)/float(c_u)) * ((index+1.0)/2.0)
 
