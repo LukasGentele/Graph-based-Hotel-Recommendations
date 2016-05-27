@@ -13,7 +13,7 @@ import random
 class RecommenderSystem:
     def __init__(self):
         self.db = DbRequests()
-        self.blacklist = ["Posted by an Accorhotels.com traveler", "A TripAdvisor Member"]
+        self.blacklist = ['A TripAdvisor Member', 'lass=', 'Posted by a La Quinta traveler', 'Posted by an Easytobook.com traveler', 'Posted by an Accorhotels.com traveler', 'Posted by a cheaprooms.com traveler', 'Posted by a Worldhotels.com traveler', 'Posted by a Virgin Holidays traveler', 'Posted by an OctopusTravel traveler', 'Posted by a Hotell.no traveler', 'Posted by a Husa Hoteles traveler', 'Posted by a Best Western traveler', 'Posted by a Langham Hotels traveler', 'Posted by a trip.ru traveler', 'Posted by a BanyanTree.com traveler', 'Posted by a Deutsche Bahn traveler', 'Posted by a Partner traveler', 'Posted by a Cleartrip traveler', 'Posted by a Wyndham Hotel Group traveler']
         np.seterr(all="ignore")
 
     def sim_measure1(self, location):
@@ -377,6 +377,25 @@ class RecommenderSystem:
                 hotel_scores.pop(key, None)
 
         return hotel_scores
+
+    def sim_measure6(self, user_id, location):
+        res = self.db.nationality_majoriy_voting()
+
+        hotel_scores = dict()
+
+        maxi = res[0][1]
+        for row in res:
+            hotel_scores[row[0]] = float(row[1]) / float(maxi)
+
+        return hotel_scores
+
+
+
+
+
+
+
+
 
     def get_rating_values_from_review(self, review):
         return_list = list()
