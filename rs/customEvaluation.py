@@ -74,9 +74,9 @@ def main(argv):
     print("Measure 5: " + str(argv[8]))
     print("Measure 6: " + str(weights[5]))
 
-    print("\nLocation:" + str(locationId))
-    print("Limit/Offset:" + str(limit) + "/" + str(offset))
-    print("Lower/Upper Reviewbound:" + str(lowerReviewBound) + "/" + str(upperReviewBound))
+    print("\nLocation: " + str(locationId))
+    print("Limit/Offset: " + str(limit) + "/" + str(offset))
+    print("Lower/Upper Reviewbound: " + str(lowerReviewBound) + "/" + str(upperReviewBound))
     evaluate.printAggregatedJoined()
     #print(evaluate.measuresJoined)
     sys.exit(2)
