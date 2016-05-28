@@ -16,3 +16,4 @@ class Execution:
                 self.rs.sim_measure4(user_id=user_id, location=location),
                 self.rs.sim_measure5(user_id=user_id, location=location),
                 self.rs.sim_measure6(user_id=user_id, location=location)]
+
