@@ -393,7 +393,7 @@ class RecommenderSystem:
                 else:
                     confidence = pearsonr(temp_user, temp_other_user)[0]
 
-                if np.isnan(confidence) or float(confidence) <= float(0.5):
+                if np.isnan(confidence) or float(confidence) <= float(0):
                     confidence = 0
 
                 similarity_score.append((other_user_rating[0], confidence))
