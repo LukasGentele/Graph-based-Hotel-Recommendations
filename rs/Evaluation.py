@@ -309,10 +309,10 @@ class Evaluation:
 
         print("\n\n### Position Distribution ###\n")
 
-        sorted_x = sorted(positionDict.items(), key=operator.itemgetter(1), reverse=True)
+        sorted_x = sorted(positionDict.items(), key=operator.itemgetter(0))
 
         for x,y in sorted_x:
-            print(str(x) + ";" + str(y))
+            print(str(x+1) + ";" + str(y))
 
 
 
