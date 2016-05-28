@@ -51,21 +51,19 @@ class Evaluation:
                 recommendations = [x[0] for x in sorted_x]
                 addedRecommendations = []
 
-                if hotelAmount > len(recommendations):
-                    if i == 0:
-                        raise AssertionError('Measure 1 returned wrong results!')
-
+                if i != 0:
                     for k in retArr[0]["ranking"]:
                         if k not in recommendations:
                             recommendations.append(k)
                             addedRecommendations.append(k)
 
-                            if len(recommendations) == hotelAmount:
-                                break
-                elif hotelAmount < len(recommendations):
+                    tempList = []
+
                     for k in recommendations:
-                        if k not in retArr[0]["ranking"]:
-                            del recommendations[recommendations.index(k)]
+                        if k in retArr[0]["ranking"]:
+                            tempList.append(k)
+
+                    recommendations = tempList
 
                 index = recommendations.index(hotelId)
 
@@ -290,7 +288,11 @@ class Evaluation:
 
         print("Avg Position: " + str(avgPosition))
         print("Avg NDPM: " + str(avgNDPM))
-        print("Avg RScore (10): " + str(avgRScore))
+        print("Avg RScore (5): " + str(avgRScore))
+
+        if (len(avgIn) >= 30):
+            print("Precision at 10: " + str(avgIn[9]/float(amount)*100) + "%")
+            print("Precision at 30: " + str(avgIn[29]/float(amount)*100) + "%")
 
         print("\n\n### Times ###\n")
 

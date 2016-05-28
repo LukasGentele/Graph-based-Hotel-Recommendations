@@ -430,7 +430,7 @@ class RecommenderSystem:
     def sim_measure6(self, user_id, location):
         res = self.db.nationality_majoriy_voting(user_id, location)
 
-        if res == False:
+        if res == False or len(res) == 0 or len(res[0]) != 2:
             return {}
 
         hotel_scores = dict()

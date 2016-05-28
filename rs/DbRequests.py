@@ -128,8 +128,6 @@ class DbRequests:
         if len(userAmount) == 0:
             return False
 
-        print self.skipAtUserAmount
-
         if userAmount[0][0] >= self.skipAtUserAmount:
             q = "MATCH (u:User)-[:HAS_VISITED]->(p:Place {hash: " + location + "}) WHERE NOT(u.name IN ['A TripAdvisor Member', 'lass=', 'Posted by a La Quinta traveler', 'Posted by an Easytobook.com traveler', 'Posted by an Accorhotels.com traveler', 'Posted by a cheaprooms.com traveler', 'Posted by a Worldhotels.com traveler', 'Posted by a Virgin Holidays traveler', 'Posted by an OctopusTravel traveler', 'Posted by a Hotell.no traveler', 'Posted by a Husa Hoteles traveler', 'Posted by a Best Western traveler', 'Posted by a Langham Hotels traveler', 'Posted by a trip.ru traveler', 'Posted by a BanyanTree.com traveler', 'Posted by a Deutsche Bahn traveler', 'Posted by a Partner traveler', 'Posted by a Cleartrip traveler', 'Posted by a Wyndham Hotel Group traveler']) MATCH (u)-[:IS_CITIZEN_OF]->\
                 (c:Country {code:\"" + code[0][0] + "\"}) MATCH (u)-[:WROTE]->(r:Review)-[:RATES]->(h:Hotel)-[:LOCATED_IN]->(p) WITH r,h \
