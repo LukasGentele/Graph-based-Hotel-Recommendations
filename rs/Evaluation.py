@@ -12,8 +12,6 @@ class Evaluation:
     measures = {}
     measuresJoined = []
 
-    weights = [0.2, 0.2, 0.2, 0.2, 0.2, 0.2]
-
     blacklist = [
         "A TripAdvisor Member",
         "lass=",
@@ -360,7 +358,7 @@ class Evaluation:
             tempList = {}
             y = 0
 
-            totalTime[4] += float(x["time"])
+            totalTime[4] += float(data[4]["time"])
 
             for x in data[4]["ranking"]:
                 if x in data[4]["appended"]:
