@@ -19,7 +19,7 @@ for row in res:
         print("User(" + str(i) + "): " + row[0])
         evaluate.evaluateDistinct(row[0], "1209176819", row[1])
 
-    if i >= 500:
+    if i >= 50:
         break
 
 evaluate.printAggregatedDistinct()

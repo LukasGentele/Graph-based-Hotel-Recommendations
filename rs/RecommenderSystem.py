@@ -303,7 +303,8 @@ class RecommenderSystem:
 
             hotel_avgs_list.append(temp_list)
 
-        user = [user_id, service_mean, location_mean, sleep_quality_mean, value_mean, cleanliness_mean, rooms_mean]
+        #user = [user_id, service_mean, location_mean, sleep_quality_mean, value_mean, cleanliness_mean, rooms_mean]
+        user = [user_id, 5, 5, 5, 5, 5, 5]
 
         hotel_scores = dict()
         maxi = 0
