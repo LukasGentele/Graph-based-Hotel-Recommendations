@@ -5,7 +5,7 @@ import sys
 def main(argv):
     if len(argv) != 11:
         # python customEvaluation.py 1209176819 1 0 0.2 0.2 0.2 0.2 0.2 y 0 100
-        print "Usage: python customEvaluation.py [location] [limit] [offset] [1] [2] [3] [4] [6] [Measure 5 y/n] [lowerBoundReviewCount] [upperBoundReviewCount]"
+        print "Usage: python customEvaluation.py [location] [limit] [offset] [1] [2] [3] [4] [6] [Measure 5 skipBelow] [lowerBoundReviewCount] [upperBoundReviewCount]"
         sys.exit(2)
 
     blacklist = [
@@ -40,10 +40,7 @@ def main(argv):
 
     weights = [float(argv[3]), float(argv[4]), float(argv[5]), float(argv[6]), 0, float(argv[7])]
 
-    if ( str(argv[8]) == "n" ):
-        measure5 = False
-    else:
-        measure5 = True
+    skipBelow = float(argv[8])
 
     lowerReviewBound = int(argv[9])
     upperReviewBound = int(argv[10])
@@ -58,7 +55,7 @@ def main(argv):
         if row[2] == 5:
             if i >= offset:
                 print("User(" + str(i) + "): " + row[0])
-                evaluate.evaluateJoined(row[0], locationId, row[1], weights, measure5)
+                evaluate.evaluateJoined(row[0], locationId, row[1], weights, skipBelow)
 
             i += 1
 
@@ -71,7 +68,7 @@ def main(argv):
     print("Measure 2: " + str(weights[1]))
     print("Measure 3: " + str(weights[2]))
     print("Measure 4: " + str(weights[3]))
-    print("Measure 5: " + str(argv[8]))
+    print("Measure 5 (skip Below): " + str(argv[8]))
     print("Measure 6: " + str(weights[5]))
 
     print("\nLocation: " + str(locationId))

@@ -314,7 +314,7 @@ class Evaluation:
 
 
 
-    def evaluateJoined(self, user, location, hotelId, weights, measure5 = True):
+    def evaluateJoined(self, user, location, hotelId, weights, measure5 = 0.0):
         if user in self.blacklist:
             return
 
@@ -352,7 +352,7 @@ class Evaluation:
 
             i += 1
 
-        if measure5 == True and "notMeasured" not in data[4]:
+        if measure5 <= 1.0 and "notMeasured" not in data[4]:
             notAvailable[4] = False
 
             tempList = {}
@@ -361,10 +361,10 @@ class Evaluation:
             totalTime[4] += float(data[4]["time"])
 
             for x in data[4]["ranking"]:
-                if x in data[4]["appended"]:
+                if x in data[4]["appended"] or data[4]["values"][y] < measure5:
                     break
 
-                tempList[x] = 100 + data[4]["values"][y]
+                tempList[x] = 10000 + data[4]["values"][y]
                 y += 1
 
             for key, value in newList.iteritems():
