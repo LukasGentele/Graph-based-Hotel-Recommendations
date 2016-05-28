@@ -345,21 +345,17 @@ class Evaluation:
                 tempList[x] = 100 + data[4]["values"][y]
                 y += 1
 
-            print (tempList)
-
             for key, value in newList.iteritems():
                 if key not in tempList:
                     tempList[key] = value
 
-            print (tempList)
-
             newList = tempList
-
-        if len(newList) == 0:
-            return
 
         sorted_x = sorted(newList.items(), key=operator.itemgetter(1), reverse=True)
         recommendations = [x[0] for x in sorted_x]
+
+        if len(recommendations) == 0 or hotelId not in recommendations:
+            return
 
         index = recommendations.index(hotelId)
 
