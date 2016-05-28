@@ -65,6 +65,18 @@ def main(argv):
         if i >= (limit+offset):
             break
 
+    print("\n\n### Input Params ###\n")
+    print("Weights:")
+    print("Measure 1: " + str(weights[0]))
+    print("Measure 2: " + str(weights[1]))
+    print("Measure 3: " + str(weights[2]))
+    print("Measure 4: " + str(weights[3]))
+    print("Measure 5: " + str(argv[8]))
+    print("Measure 6: " + str(weights[5]))
+
+    print("\nLocation: " + str(locationId))
+    print("Limit/Offset: " + str(limit) + "/" + str(offset))
+    print("Lower/Upper Reviewbound: " + str(lowerReviewBound) + "/" + str(upperReviewBound))
     evaluate.printAggregatedJoined()
     #print(evaluate.measuresJoined)
     sys.exit(2)

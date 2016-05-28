@@ -243,6 +243,7 @@ class Evaluation:
         avgPosition = 0.0
         avgHotelAmount = 0.0
 
+        amountMeasures = [0,0,0,0,0,0]
         totalTimeMeasures = [0,0,0,0,0,0]
         totalTime = 0.0
 
@@ -252,21 +253,23 @@ class Evaluation:
             while len(avgIn) < len(x["isInK"]):
                 avgIn.append(0)
 
-            if "notMeasured" not in x:
-                amount += 1
+            amount += 1
+            avgNDPM += x["ndpm"]
+            avgHotelAmount += x["hotelAmount"]
+            avgRScore += x["rScore"]
+            avgPosition += x["position"]
 
-                avgNDPM += x["ndpm"]
-                avgHotelAmount += x["hotelAmount"]
-                avgRScore += x["rScore"]
-                avgPosition += x["position"]
+            for y in range(len(x["notAvailable"])):
+                if x["notAvailable"][y] == False:
+                    amountMeasures[y] += 1
 
-                for y in range(len(x["totalTime"])):
-                    totalTimeMeasures[y] += float(x["totalTime"][y])
-                    totalTime += float(x["totalTime"][y])
+            for y in range(len(x["totalTime"])):
+                totalTimeMeasures[y] += float(x["totalTime"][y])
+                totalTime += float(x["totalTime"][y])
 
-                for y in range(len(x["isInK"])):
-                    if x["isInK"][y] == True:
-                        avgIn[y] += 1
+            for y in range(len(x["isInK"])):
+                if x["isInK"][y] == True:
+                    avgIn[y] += 1
 
 
         avgNDPM = avgNDPM / amount
@@ -288,7 +291,7 @@ class Evaluation:
         print("\n\n### Times ###\n")
 
         for y in range(len(totalTimeMeasures)):
-            print("Measure " + str(y+1) + " took: " + str(totalTimeMeasures[y]) + "s (avg. " + str(totalTimeMeasures[y]/amount) + ")")
+            print("Measure " + str(y+1) + " took: " + str(totalTimeMeasures[y]) + "s (avg. " + str(totalTimeMeasures[y]/max(1,amountMeasures[y])) + ", ex. " + str(amountMeasures[y]) + " times)")
 
         print("\nTotal Time: " + str(totalTime) + "s")
 
@@ -306,18 +309,21 @@ class Evaluation:
         i = 0
         newList = {}
         totalTime = []
+        notAvailable = [False, False, False, False, False, False]
 
         # Calculate without 5
         for x in data:
             totalTime.append(0)
 
             if i == 4 or weights[i] <= 0:
+                notAvailable[i] = True
                 i += 1
                 continue
 
             totalTime[i] += float(x["time"])
 
             if "notMeasured" in x:
+                notAvailable[i] = True
                 i += 1
                 continue
 
@@ -333,6 +339,8 @@ class Evaluation:
             i += 1
 
         if measure5 == True and "notMeasured" not in data[4]:
+            notAvailable[4] = False
+
             tempList = {}
             y = 0
 
@@ -376,6 +384,7 @@ class Evaluation:
             "rScore": _rScore,
             "isInK": _isInK,
             "position": index,
+            "notAvailable": notAvailable,
             "hotelAmount": len(recommendations),
             "totalTime": totalTime
         })
