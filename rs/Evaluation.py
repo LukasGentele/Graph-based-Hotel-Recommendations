@@ -2,6 +2,7 @@ import hashlib
 import pickle
 import datetime
 from Run import Execution
+from RecommenderSystem import RecommenderSystem
 from DbRequests import DbRequests
 import operator
 import math
@@ -9,7 +10,7 @@ import math
 class Evaluation:
     cache = {}
     measures = {}
-    measuresJoined = {}
+    measuresJoined = []
 
     weights = [0.2, 0.2, 0.2, 0.2, 0.2, 0.2]
 
@@ -37,8 +38,8 @@ class Evaluation:
     ]
 
     def __init__(self):
-        self.runner = Execution()
         self.db = DbRequests()
+        self.rs = RecommenderSystem()
 
     def preprocessForEvaluation(self, result, user, location, hotelId, time):
         i = 0
@@ -87,7 +88,7 @@ class Evaluation:
                     "isInK": _isInK,
                     "position": index,
                     "hotelAmount": hotelAmount,
-                    "time": time
+                    "time": time[i]
                 })
             else:
                 retArr.append({
@@ -95,7 +96,7 @@ class Evaluation:
                     "location": location,
                     "hotelId": hotelId,
                     "notMeasured": True,
-                    "time": time
+                    "time": time[i]
                 })
 
             i += 1
@@ -103,11 +104,52 @@ class Evaluation:
         return retArr
 
     def run(self, user, location, hotelId):
+        result = []
+        time = []
+
+        # MEASURE 1
         a = datetime.datetime.now()
-        result = self.runner.run(user_id=user, location=location)
+        result.append(self.rs.sim_measure1(location=location))
         b = datetime.datetime.now()
 
-        result = self.preprocessForEvaluation(result, user, location, hotelId, (b-a).total_seconds())
+        time.append((b-a).total_seconds())
+
+        # MEASURE 2
+        a = datetime.datetime.now()
+        result.append(self.rs.sim_measure2(user_id=user, location=location))
+        b = datetime.datetime.now()
+
+        time.append((b - a).total_seconds())
+
+        # MEASURE 3
+        a = datetime.datetime.now()
+        result.append(self.rs.sim_measure3(user_id=user, location=location))
+        b = datetime.datetime.now()
+
+        time.append((b - a).total_seconds())
+
+        # MEASURE 4
+        a = datetime.datetime.now()
+        result.append(self.rs.sim_measure4(user_id=user, location=location))
+        b = datetime.datetime.now()
+
+        time.append((b - a).total_seconds())
+
+        # MEASURE 5
+        a = datetime.datetime.now()
+        result.append(self.rs.sim_measure5(user_id=user, location=location))
+        b = datetime.datetime.now()
+
+        time.append((b - a).total_seconds())
+
+        # MEASURE 6
+        a = datetime.datetime.now()
+        result.append(self.rs.sim_measure6(user_id=user, location=location))
+        b = datetime.datetime.now()
+
+        time.append((b - a).total_seconds())
+
+        result = self.preprocessForEvaluation(result, user, location, hotelId, time)
 
         return result
 
@@ -197,112 +239,150 @@ class Evaluation:
     def printAggregatedJoined(self):
         avgNDPM = 0.0
         avgRScore = 0.0
-        avgInK = 0.0
+        avgIn = []
         avgPosition = 0.0
+        avgHotelAmount = 0.0
+
+        totalTimeMeasures = [0,0,0,0,0,0]
+        totalTime = 0.0
 
         amount = 0
 
         for x in self.measuresJoined:
-            x = self.measuresJoined[x]
+            while len(avgIn) < len(x["isInK"]):
+                avgIn.append(0)
 
-            if x["ndpm"] >= 0:
+            if "notMeasured" not in x:
                 amount += 1
 
                 avgNDPM += x["ndpm"]
+                avgHotelAmount += x["hotelAmount"]
                 avgRScore += x["rScore"]
                 avgPosition += x["position"]
 
-                if x["isInK"] == True:
-                    avgInK += 1
+                for y in range(len(x["totalTime"])):
+                    totalTimeMeasures[y] += float(x["totalTime"][y])
+                    totalTime += float(x["totalTime"][y])
 
-        if amount == 0:
-            return
+                for y in range(len(x["isInK"])):
+                    if x["isInK"][y] == True:
+                        avgIn[y] += 1
+
 
         avgNDPM = avgNDPM / amount
         avgRScore = avgRScore / amount
-        avgInK = avgInK / amount
         avgPosition = avgPosition / amount
+        avgHotelAmount = avgHotelAmount / amount
 
-        print("Amount: " + str(amount))
-        print("Avg NDPM: " + str(avgNDPM))
-        print("Avg RScore: " + str(avgRScore))
-        print("Avg InK: " + str(avgInK))
+        print("\n\n### General Info ###\n")
+
+        print("User Amount: " + str(amount))
+        print("HotelAmount: " + str(avgHotelAmount))
+
+        print("\n\n### Evaluation Metrics ###\n")
+
         print("Avg Position: " + str(avgPosition))
+        print("Avg NDPM: " + str(avgNDPM))
+        print("Avg RScore (10): " + str(avgRScore))
 
-    def evaluateJoined(self, user, location, hotelId, overallRating):
+        print("\n\n### Times ###\n")
+
+        for y in range(len(totalTimeMeasures)):
+            print("Measure " + str(y+1) + " took: " + str(totalTimeMeasures[y]) + "s (avg. " + str(totalTimeMeasures[y]/amount) + ")")
+
+        print("\nTotal Time: " + str(totalTime) + "s")
+
+        print("\n\n### In K ###\n")
+
+        for y in range(len(avgIn)):
+            print("In k(" + str(y+1) + "): " + str(avgIn[y]) + " (" + str(avgIn[y]/float(amount)*100) + "%)")
+
+    def evaluateJoined(self, user, location, hotelId, weights, measure5 = True):
         if user in self.blacklist:
             return
 
-        #print("Start " + str(user))
-        data = self.getMeasures(user, location)
+        data = self.getMeasures(user, location, hotelId)
 
-        weights = self.weights[:]
         i = 0
+        newList = {}
+        totalTime = []
 
-        for i,x in enumerate(data["data"]):
-            if x == False or len(x) == 0 or hotelId not in x.keys():
-                amZero = 1
+        # Calculate without 5
+        for x in data:
+            totalTime.append(0)
 
-                for j in weights:
-                    if j == 0.0:
-                        amZero += 1
+            if i == 4 or weights[i] <= 0:
+                i += 1
+                continue
 
-                divisor = (len(weights) - amZero)
+            totalTime[i] += float(x["time"])
 
-                if( divisor == 0 ):
-                    self.measuresJoined[hashlib.sha1(user.encode('utf-8')).hexdigest()] = {
-                        "notMeasured": True
-                    }
+            if "notMeasured" in x:
+                i += 1
+                continue
 
-                    return
+            for h in x["ranking"]:
+                if h in x["appended"]:
+                    break
 
-                share = weights[i]/divisor
-                weights[i] = 0
+                if h not in newList:
+                    newList[h] = x["values"][x["ranking"].index(h)] * weights[i]
+                else:
+                    newList[h] += x["values"][x["ranking"].index(h)] * weights[i]
 
-                for j, val in enumerate(weights):
-                    if val != 0.0:
-                        weights[j] += share
+            i += 1
 
-        hotelList = {}
+        if measure5 == True and "notMeasured" not in data[4]:
+            tempList = {}
+            y = 0
 
-        for i, x in enumerate(data["data"]):
-            if weights[i] > 0.0:
-                for j in x.keys():
-                    if math.isnan(x[j]):
-                        continue
+            totalTime[4] += float(x["time"])
 
-                    if j not in hotelList:
-                        hotelList[j] = x[j] * weights[i]
-                    else:
-                        hotelList[j] += x[j] * weights[i]
+            for x in data[4]["ranking"]:
+                if x in data[4]["appended"]:
+                    break
 
-        if (overallRating == 1 or overallRating == 2):
-            sorted_x = sorted(hotelList.items(), key=operator.itemgetter(1))
-        else:
-            sorted_x = sorted(hotelList.items(), key=operator.itemgetter(1), reverse=True)
+                tempList[x] = 100 + data[4]["values"][y]
+                y += 1
 
-        #print sorted_x
+            print (tempList)
 
+            for key, value in newList.iteritems():
+                if key not in tempList:
+                    tempList[key] = value
+
+            print (tempList)
+
+            newList = tempList
+
+        if len(newList) == 0:
+            return
+
+        sorted_x = sorted(newList.items(), key=operator.itemgetter(1), reverse=True)
         recommendations = [x[0] for x in sorted_x]
+
         index = recommendations.index(hotelId)
 
         _ndpm = self.ndpm(recommendations, hotelId)
         _rScore = self.rScore(index)
-        _isInK = self.isInK(recommendations, hotelId)
 
-        #print len(recommendations)
-        #print _ndpm
-        #print index
-        #print _isInK
+        _isInK = []
 
-        self.measuresJoined[hashlib.sha1(user.encode('utf-8')).hexdigest()] = {
-            "reverse": False,
-            "position": index,
+        for i in range(1, min(101, len(recommendations))):
+            _isInK.append(self.isInK(recommendations, hotelId, i))
+
+        self.measuresJoined.append({
+            "user": user,
+            "location": location,
+            "hotelId": hotelId,
+            "ranking": recommendations,
             "ndpm": _ndpm,
             "rScore": _rScore,
             "isInK": _isInK,
-            "time": data["time"]
-        }
+            "position": index,
+            "hotelAmount": len(recommendations),
+            "totalTime": totalTime
+        })
 
     def evaluateDistinct(self, user, location, hotelId):
         if user in self.blacklist:
@@ -394,10 +474,10 @@ class Evaluation:
     def rScore(self, val):
         return 1.0/pow(2, (val/5))
 
-    def isInK(self, recommendations, val):
+    def isInK(self, recommendations, val, k = 10):
         index = recommendations.index(val) + 1
 
-        if index <= 10:
+        if index <= k:
             return True
         else:
             return False

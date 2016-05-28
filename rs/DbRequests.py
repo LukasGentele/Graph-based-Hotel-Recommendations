@@ -37,8 +37,13 @@ class DbRequests:
     def run(self, query):
         return self.gdb.query(query)
 
+    def users_and_hotel_in_location_with_bound(self, location, lower, upper):
+        q = "MATCH (p:Place {hash: " + str(location) + "})-[:OFFERS]-(h:Hotel)-[:RATED_BY]-(r:Review)-[:WRITTEN_BY]-(u:User)-[:WROTE]->(r2:Review) WHERE NOT(u.name IN ['A TripAdvisor Member', 'lass=', 'Posted by a La Quinta traveler', 'Posted by an Easytobook.com traveler', 'Posted by an Accorhotels.com traveler', 'Posted by a cheaprooms.com traveler', 'Posted by a Worldhotels.com traveler', 'Posted by a Virgin Holidays traveler', 'Posted by an OctopusTravel traveler', 'Posted by a Hotell.no traveler', 'Posted by a Husa Hoteles traveler', 'Posted by a Best Western traveler', 'Posted by a Langham Hotels traveler', 'Posted by a trip.ru traveler', 'Posted by a BanyanTree.com traveler', 'Posted by a Deutsche Bahn traveler', 'Posted by a Partner traveler', 'Posted by a Cleartrip traveler', 'Posted by a Wyndham Hotel Group traveler']) WITH u,h,r,count(r2) as numReviews WHERE numReviews >= " + str(lower) + " AND numReviews <= " + str(upper) + " RETURN u.name,h.id,r.ratingOverall"
+        #print (q)
+        return self.checkCache(q)
+
     def users_and_hotel_in_location(self, location):
-        q = "MATCH (p:Place {hash: " + location + "})-[:OFFERS]-(h:Hotel)-[:RATED_BY]-(r:Review)-[:WRITTEN_BY]->(u:User) RETURN u.name,h.id,r.ratingOverall"
+        q = "MATCH (p:Place {hash: " + location + "})-[:OFFERS]-(h:Hotel)-[:RATED_BY]-(r:Review)-[:WRITTEN_BY]->(u:User) WHERE NOT(u.name IN ['A TripAdvisor Member', 'lass=', 'Posted by a La Quinta traveler', 'Posted by an Easytobook.com traveler', 'Posted by an Accorhotels.com traveler', 'Posted by a cheaprooms.com traveler', 'Posted by a Worldhotels.com traveler', 'Posted by a Virgin Holidays traveler', 'Posted by an OctopusTravel traveler', 'Posted by a Hotell.no traveler', 'Posted by a Husa Hoteles traveler', 'Posted by a Best Western traveler', 'Posted by a Langham Hotels traveler', 'Posted by a trip.ru traveler', 'Posted by a BanyanTree.com traveler', 'Posted by a Deutsche Bahn traveler', 'Posted by a Partner traveler', 'Posted by a Cleartrip traveler', 'Posted by a Wyndham Hotel Group traveler']) RETURN u.name,h.id,r.ratingOverall"
         return self.checkCache(q)
 
     def hotels_in_same_class_in_location(self, hotel, clas):
@@ -47,7 +52,7 @@ class DbRequests:
         return self.run(q)
 
     def users_same_hotel_for_target_location(self, hotel, location, user):
-        q = "MATCH (h:Hotel {id: \"" + hotel + "\"})-[:BOOKED_BY]->(u:User)-[:HAS_VISITED]->(p:Place {hash: " + location + "}) WHERE NOT u.name = \"" + user + "\" RETURN u"
+        q = "MATCH (h:Hotel {id: \"" + hotel + "\"})-[:BOOKED_BY]->(u:User)-[:HAS_VISITED]->(p:Place {hash: " + location + "}) WHERE NOT(u.name IN ['A TripAdvisor Member', 'lass=', 'Posted by a La Quinta traveler', 'Posted by an Easytobook.com traveler', 'Posted by an Accorhotels.com traveler', 'Posted by a cheaprooms.com traveler', 'Posted by a Worldhotels.com traveler', 'Posted by a Virgin Holidays traveler', 'Posted by an OctopusTravel traveler', 'Posted by a Hotell.no traveler', 'Posted by a Husa Hoteles traveler', 'Posted by a Best Western traveler', 'Posted by a Langham Hotels traveler', 'Posted by a trip.ru traveler', 'Posted by a BanyanTree.com traveler', 'Posted by a Deutsche Bahn traveler', 'Posted by a Partner traveler', 'Posted by a Cleartrip traveler', 'Posted by a Wyndham Hotel Group traveler']) AND NOT u.name = \"" + user + "\" RETURN u"
         #print(q)
         return self.run(q)
 
@@ -56,16 +61,8 @@ class DbRequests:
         #print(q)
         return self.run(q)
 
-    def all_users_for_location(self, user=None, location=None):
-        if user == None:
-            q = "MATCH (p:Place {hash: " + location + "})-[:VISITED_BY]->(u:User) RETURN u"
-            return self.checkCache(q)
-        else:
-            q = "MATCH (p:Place {hash: " + location + "})-[:VISITED_BY]->(u:User) WHERE NOT u.name = \"" + user + "\" RETURN u"
-            return self.run(q)
-
     def all_users_for_hotel(self, user, hotel):
-        q = "MATCH (h:Hotel {id: \"" + hotel + "\"})-[:BOOKED_BY]->(u:User) WHERE NOT u.name = \"" + user + "\" RETURN u"
+        q = "MATCH (h:Hotel {id: \"" + hotel + "\"})-[:BOOKED_BY]->(u:User) WHERE NOT(u.name IN ['A TripAdvisor Member', 'lass=', 'Posted by a La Quinta traveler', 'Posted by an Easytobook.com traveler', 'Posted by an Accorhotels.com traveler', 'Posted by a cheaprooms.com traveler', 'Posted by a Worldhotels.com traveler', 'Posted by a Virgin Holidays traveler', 'Posted by an OctopusTravel traveler', 'Posted by a Hotell.no traveler', 'Posted by a Husa Hoteles traveler', 'Posted by a Best Western traveler', 'Posted by a Langham Hotels traveler', 'Posted by a trip.ru traveler', 'Posted by a BanyanTree.com traveler', 'Posted by a Deutsche Bahn traveler', 'Posted by a Partner traveler', 'Posted by a Cleartrip traveler', 'Posted by a Wyndham Hotel Group traveler']) AND NOT u.name = \"" + user + "\" RETURN u"
 
         #print(q)
         return self.run(q)
@@ -121,7 +118,7 @@ class DbRequests:
             return False
 
         q = "MATCH (u:User)-[:HAS_VISITED]->(p:Place {hash: " + location + "}) MATCH (u)-[:IS_CITIZEN_OF]->\
-            (c:Country {code:\"" + code[0][0] + "\"}) MATCH (u)-[:WROTE]->(r:Review)-[:RATES]->(h:Hotel)-[:LOCATED_IN]->(p) WITH r,h \
+            (c:Country {code:\"" + code[0][0] + "\"}) MATCH (u)-[:WROTE]->(r:Review)-[:RATES]->(h:Hotel)-[:LOCATED_IN]->(p) WHERE NOT(u.name IN ['A TripAdvisor Member', 'lass=', 'Posted by a La Quinta traveler', 'Posted by an Easytobook.com traveler', 'Posted by an Accorhotels.com traveler', 'Posted by a cheaprooms.com traveler', 'Posted by a Worldhotels.com traveler', 'Posted by a Virgin Holidays traveler', 'Posted by an OctopusTravel traveler', 'Posted by a Hotell.no traveler', 'Posted by a Husa Hoteles traveler', 'Posted by a Best Western traveler', 'Posted by a Langham Hotels traveler', 'Posted by a trip.ru traveler', 'Posted by a BanyanTree.com traveler', 'Posted by a Deutsche Bahn traveler', 'Posted by a Partner traveler', 'Posted by a Cleartrip traveler', 'Posted by a Wyndham Hotel Group traveler']) WITH r,h \
             RETURN DISTINCT h.id, SUM(r.ratingOverall) as sumRating ORDER BY sumRating DESC"
 
         #print(q)
