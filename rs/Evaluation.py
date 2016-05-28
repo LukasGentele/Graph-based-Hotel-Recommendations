@@ -249,6 +249,8 @@ class Evaluation:
 
         amount = 0
 
+        positionDict = {}
+
         for x in self.measuresJoined:
             while len(avgIn) < len(x["isInK"]):
                 avgIn.append(0)
@@ -258,6 +260,11 @@ class Evaluation:
             avgHotelAmount += x["hotelAmount"]
             avgRScore += x["rScore"]
             avgPosition += x["position"]
+
+            if x["position"] in positionDict:
+                positionDict[x["position"]] += 1
+            else:
+                positionDict[x["position"]] = 1
 
             for y in range(len(x["notAvailable"])):
                 if x["notAvailable"][y] == False:
@@ -299,6 +306,15 @@ class Evaluation:
 
         for y in range(len(avgIn)):
             print("In k(" + str(y+1) + "): " + str(avgIn[y]) + " (" + str(avgIn[y]/float(amount)*100) + "%)")
+
+        print("\n\n### Position Distribution ###\n")
+
+        sorted_x = sorted(positionDict.items(), key=operator.itemgetter(0))
+
+        for x,y in sorted_x:
+            print(str(x+1) + ";" + str(y))
+
+
 
     def evaluateJoined(self, user, location, hotelId, weights, measure5 = True):
         if user in self.blacklist:
