@@ -111,15 +111,29 @@ class DbRequests:
 
         return self.checkCache(q)
 
+    def get_user_amount_for_place_by_nationality(self, code, location):
+        q = "MATCH (c:Country {code:'" +code + "'})<-[:IS_CITIZEN_OF]-(u:User)-[:HAS_VISITED]->(p:Place {hash: " + location + "}) WHERE NOT(u.name IN ['A TripAdvisor Member', 'lass=', 'Posted by a La Quinta traveler', 'Posted by an Easytobook.com traveler', 'Posted by an Accorhotels.com traveler', 'Posted by a cheaprooms.com traveler', 'Posted by a Worldhotels.com traveler', 'Posted by a Virgin Holidays traveler', 'Posted by an OctopusTravel traveler', 'Posted by a Hotell.no traveler', 'Posted by a Husa Hoteles traveler', 'Posted by a Best Western traveler', 'Posted by a Langham Hotels traveler', 'Posted by a trip.ru traveler', 'Posted by a BanyanTree.com traveler', 'Posted by a Deutsche Bahn traveler', 'Posted by a Partner traveler', 'Posted by a Cleartrip traveler', 'Posted by a Wyndham Hotel Group traveler']) RETURN COUNT(u)"
+
+        return self.checkCache(q)
+
     def nationality_majoriy_voting(self, user, location):
         code = self.get_nationality_from_user(user)
 
         if len(code) == 0:
             return False
 
-        q = "MATCH (u:User)-[:HAS_VISITED]->(p:Place {hash: " + location + "}) MATCH (u)-[:IS_CITIZEN_OF]->\
-            (c:Country {code:\"" + code[0][0] + "\"}) MATCH (u)-[:WROTE]->(r:Review)-[:RATES]->(h:Hotel)-[:LOCATED_IN]->(p) WHERE NOT(u.name IN ['A TripAdvisor Member', 'lass=', 'Posted by a La Quinta traveler', 'Posted by an Easytobook.com traveler', 'Posted by an Accorhotels.com traveler', 'Posted by a cheaprooms.com traveler', 'Posted by a Worldhotels.com traveler', 'Posted by a Virgin Holidays traveler', 'Posted by an OctopusTravel traveler', 'Posted by a Hotell.no traveler', 'Posted by a Husa Hoteles traveler', 'Posted by a Best Western traveler', 'Posted by a Langham Hotels traveler', 'Posted by a trip.ru traveler', 'Posted by a BanyanTree.com traveler', 'Posted by a Deutsche Bahn traveler', 'Posted by a Partner traveler', 'Posted by a Cleartrip traveler', 'Posted by a Wyndham Hotel Group traveler']) WITH r,h \
-            RETURN DISTINCT h.id, SUM(r.ratingOverall) as sumRating ORDER BY sumRating DESC"
+        userAmount = self.get_user_amount_for_place_by_nationality(code[0][0], location)
 
-        #print(q)
-        return self.checkCache(q)
+        if len(userAmount) == 0:
+            return False
+
+        if userAmount[0][0] >= 5000:
+            q = "MATCH (u:User)-[:HAS_VISITED]->(p:Place {hash: " + location + "}) WHERE NOT(u.name IN ['A TripAdvisor Member', 'lass=', 'Posted by a La Quinta traveler', 'Posted by an Easytobook.com traveler', 'Posted by an Accorhotels.com traveler', 'Posted by a cheaprooms.com traveler', 'Posted by a Worldhotels.com traveler', 'Posted by a Virgin Holidays traveler', 'Posted by an OctopusTravel traveler', 'Posted by a Hotell.no traveler', 'Posted by a Husa Hoteles traveler', 'Posted by a Best Western traveler', 'Posted by a Langham Hotels traveler', 'Posted by a trip.ru traveler', 'Posted by a BanyanTree.com traveler', 'Posted by a Deutsche Bahn traveler', 'Posted by a Partner traveler', 'Posted by a Cleartrip traveler', 'Posted by a Wyndham Hotel Group traveler']) MATCH (u)-[:IS_CITIZEN_OF]->\
+                (c:Country {code:\"" + code[0][0] + "\"}) MATCH (u)-[:WROTE]->(r:Review)-[:RATES]->(h:Hotel)-[:LOCATED_IN]->(p) WITH r,h \
+                RETURN DISTINCT h.id, SUM(r.ratingOverall) as sumRating ORDER BY sumRating DESC"
+            return self.checkCache(q)
+        else:
+            q = "MATCH (u:User)-[:HAS_VISITED]->(p:Place {hash: " + location + "}) WHERE NOT(u.name IN ['" + user + "', 'A TripAdvisor Member', 'lass=', 'Posted by a La Quinta traveler', 'Posted by an Easytobook.com traveler', 'Posted by an Accorhotels.com traveler', 'Posted by a cheaprooms.com traveler', 'Posted by a Worldhotels.com traveler', 'Posted by a Virgin Holidays traveler', 'Posted by an OctopusTravel traveler', 'Posted by a Hotell.no traveler', 'Posted by a Husa Hoteles traveler', 'Posted by a Best Western traveler', 'Posted by a Langham Hotels traveler', 'Posted by a trip.ru traveler', 'Posted by a BanyanTree.com traveler', 'Posted by a Deutsche Bahn traveler', 'Posted by a Partner traveler', 'Posted by a Cleartrip traveler', 'Posted by a Wyndham Hotel Group traveler']) MATCH (u)-[:IS_CITIZEN_OF]->\
+                (c:Country {code:\"" + code[0][0] + "\"}) MATCH (u)-[:WROTE]->(r:Review)-[:RATES]->(h:Hotel)-[:LOCATED_IN]->(p) WITH r,h \
+                RETURN DISTINCT h.id, SUM(r.ratingOverall) as sumRating ORDER BY sumRating DESC"
+            return self.run(q)
