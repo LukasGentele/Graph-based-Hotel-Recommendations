@@ -3,9 +3,9 @@ from Evaluation import Evaluation
 import sys
 
 def main(argv):
-    if len(argv) != 11:
+    if len(argv) != 12:
         # python customEvaluation.py 1209176819 1 0 0.2 0.2 0.2 0.2 0.2 y 0 100
-        print "Usage: python customEvaluation.py [location] [limit] [offset] [1] [2] [3] [4] [6] [Measure 5 skipBelow] [lowerBoundReviewCount] [upperBoundReviewCount]"
+        print "Usage: python customEvaluation.py [location] [limit] [offset] [1] [2] [3] [4] [6] [Measure 5 skipBelow] [lowerBoundReviewCount] [upperBoundReviewCount] [userAmountSkip]"
         sys.exit(2)
 
     blacklist = [
@@ -45,6 +45,8 @@ def main(argv):
     lowerReviewBound = int(argv[9])
     upperReviewBound = int(argv[10])
 
+    userAmountSkip = int(argv[11])
+
     res = db.users_and_hotel_in_location_with_bound(locationId, lowerReviewBound, upperReviewBound)
     i = 0
 
@@ -55,7 +57,7 @@ def main(argv):
         if row[2] == 5:
             if i >= offset:
                 print("User(" + str(i) + "): " + row[0])
-                evaluate.evaluateJoined(row[0], locationId, row[1], weights, skipBelow)
+                evaluate.evaluateJoined(row[0], locationId, row[1], weights, skipBelow, userAmountSkip)
 
             i += 1
 

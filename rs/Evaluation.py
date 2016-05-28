@@ -36,7 +36,6 @@ class Evaluation:
     ]
 
     def __init__(self):
-        self.db = DbRequests()
         self.rs = RecommenderSystem()
 
     def preprocessForEvaluation(self, result, user, location, hotelId, time):
@@ -314,9 +313,11 @@ class Evaluation:
 
 
 
-    def evaluateJoined(self, user, location, hotelId, weights, measure5 = 0.0):
+    def evaluateJoined(self, user, location, hotelId, weights, measure5 = 0.0, skipAtUserAmount = 4000):
         if user in self.blacklist:
             return
+
+        self.rs.setSkipAtUserAmount(skipAtUserAmount)
 
         data = self.getMeasures(user, location, hotelId)
 
