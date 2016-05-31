@@ -7,7 +7,8 @@ $constraints = [
         'Place' => 'hash',
         'Hotel' => 'id',
         'User' => 'name',
-        'Review' => 'id'
+        'Review' => 'id',
+        'Country' => 'name'
     ]
 ];
 

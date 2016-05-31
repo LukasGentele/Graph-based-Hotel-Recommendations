@@ -4,8 +4,8 @@ fclose(STDIN);
 fclose(STDOUT);
 fclose(STDERR);
 $STDIN = fopen('/dev/null', 'r');
-$STDOUT = fopen('php_output_' . $argv[1] . '.log', 'wb');
-$STDERR = fopen('php_error_' . $argv[1] . '.log', 'wb');
+$STDOUT = fopen('php_output_z_' . $argv[1] . '.log', 'wb');
+$STDERR = fopen('php_error_z_' . $argv[1] . '.log', 'wb');
 
 use Neoxygen\NeoClient\ClientBuilder;
 
@@ -18,7 +18,7 @@ $accessData = json_decode(file_get_contents($dbAccessDataFile));
 
 $connUrl = parse_url($accessData->url);
 
-$graph = ClientBuilder::create()->addConnection('default', $connUrl['scheme'], $connUrl['host'], $connUrl['port'], true, $accessData->user, $accessData->password)->build();
+$graph = ClientBuilder::create()->addConnection('default', $connUrl['scheme'], $connUrl['host'], $connUrl['port'], true, $accessData->user, $accessData->password)->setDefaultTimeout(20)->build();
 
 function cleanText($str) {
     return $str;
@@ -44,12 +44,12 @@ $executeQuery = function($query) use ($graph, $argv) {
     }
     catch (Exception $e) {
         if (strpos($e->getMessage(), 'Neo.ClientError.Schema.ConstraintValidationFailed') === false) {
-            file_put_contents('error_' . $argv[1] . '.log', 'Query Error: ' . $query . PHP_EOL . $e->getMessage() . PHP_EOL . PHP_EOL, FILE_APPEND);
+            file_put_contents('error_z_' . $argv[1] . '.log', 'Query Error: ' . $query . PHP_EOL . $e->getMessage() . PHP_EOL . PHP_EOL, FILE_APPEND);
         }
     }
     return false;
 };
 
 $infoLog = function($message) use($argv) {
-    file_put_contents('info_' . $argv[1] . '.log', $message . PHP_EOL, FILE_APPEND);
+    file_put_contents('info_z_' . $argv[1] . '.log', $message . PHP_EOL, FILE_APPEND);
 };
